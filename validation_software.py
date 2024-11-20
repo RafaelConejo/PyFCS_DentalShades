@@ -2,17 +2,22 @@ import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 from PIL import Image, ImageTk
 import os
+import sys
 import random
 from openpyxl import Workbook, load_workbook
 
+current_dir = os.path.dirname(__file__)
+sys.path.append(current_dir)
+
 # Create main window
 root = tk.Tk()
+root.geometry("1200x900") 
 root.title("Color Selector")
 
 def ask_user_name():
     """Asks the user to enter a name."""
     global user_name
-    user_name = simpledialog.askstring("User Name", "Enter your name:")
+    user_name = simpledialog.askstring("ID", "Enter user ID:")
     if not user_name:  # If the user doesn't enter anything
         messagebox.showerror("Error", "You must enter a name to continue.")
         ask_user_name()  # Ask for the name again
@@ -20,19 +25,20 @@ def ask_user_name():
 
 # Function to load the corresponding image from the 15 selected options
 def update_image_from_selection():
+    global image_id
     selected_label = selected_color.get()  # Get the selected label (e.g., "A1", "B2", etc.)
     
     # If no selection is made, clear the placeholder
     if not selected_label:
         placeholder_1.delete("all")  # Clear content of Image 1
-        placeholder_1.create_text(50, 50, text="Image 1")  # Show a default text
+        placeholder_1.create_text(50, 60, text=" ")  
         return
     
-    # Determine the directory based on the selected option (tooth or color)
+    # Determine the directory based on the selected option (tooth or reference)
     if image_source.get() == "tooth":
-        directory = "Datasets/vita_tooth_test"  # If "tooth", use tooth images
+        directory = "Datasets/vita_tooth_test"  
     else:
-        directory = "Datasets/reference_colors"  # If "color", use color images
+        directory = "Datasets/reference_colors"  
 
     # Build the image path
     image_path = os.path.join(directory, f"{selected_label}.png")
@@ -41,18 +47,48 @@ def update_image_from_selection():
     if os.path.exists(image_path):
         # Load the image and preserve transparency
         img = Image.open(image_path).convert("RGBA")
-        img_resized = img.resize((100, 100), Image.Resampling.LANCZOS)  # Resize the image
+        img_resized = img.resize((77, 112), Image.Resampling.LANCZOS)  # Resize the image
         img_tk = ImageTk.PhotoImage(img_resized)  # Convert the image to Tkinter format
 
         # Clear the canvas before adding the new image
         placeholder_1.delete("all")
         placeholder_1.image = img_tk  # Keep the reference to avoid garbage collection
-        placeholder_1.create_image(50, 50, image=img_tk)  # Draw the image on the canvas
+        image_id = placeholder_1.create_image(50, 60, image=img_tk)  # Draw the image on the canvas
+
+        # Link click with move
+        placeholder_1.bind("<ButtonPress-1>", on_image_press)  # When the user presses the mouse
+        placeholder_1.bind("<B1-Motion>", on_image_drag)      # When the user drags the image
+        placeholder_1.bind("<ButtonRelease-1>", on_image_release)
+        
     else:
         # If the image is not found, show an error message
         messagebox.showerror("Error", f"Image not found: {image_path}")
         placeholder_1.delete("all")
-        placeholder_1.create_text(50, 50, text="Image not found")
+        placeholder_1.create_text(50, 60, text="Image not found")
+
+def on_image_press(event):
+    global offset_x, offset_y
+    # Guardamos las coordenadas iniciales donde el usuario hace clic (coordenadas globales)
+    offset_x = event.x_root  # Coordenada X global
+    offset_y = event.y_root  # Coordenada Y global
+
+def on_image_drag(event):
+    global offset_x, offset_y
+    # Calculamos el desplazamiento de la imagen en relación con las coordenadas globales
+    dx = event.x_root - offset_x
+    dy = event.y_root - offset_y
+    
+    # Mover la imagen dentro del Canvas
+    placeholder_1.move(image_id, dx, dy)
+    
+    # Actualizamos la posición de la imagen para el próximo movimiento
+    offset_x = event.x_root
+    offset_y = event.y_root
+
+def on_image_release(event):
+    global original_position_img_1, image_id, offset_x, offset_y
+    # Volver a la posición original de la imagen cuando se suelta el clic
+    placeholder_1.coords(image_id, original_position_img_1[0], original_position_img_1[1])
 
 
 # Function to update images according to the selected Radiobutton
@@ -70,7 +106,7 @@ def load_vita_images():
         if filename.endswith(".png"):
             image_path = os.path.join(vita_dir, filename)
             img = Image.open(image_path).convert("RGBA")  # Load with transparency
-            img = img.resize((100, 100), Image.Resampling.LANCZOS)
+            img = img.resize((77, 112), Image.Resampling.LANCZOS)
             vita_images.append((filename, ImageTk.PhotoImage(img)))  # Save the name and image
 
     # Shuffle images at the start
@@ -81,7 +117,9 @@ def show_next_image():
     global current_index
     if vita_images:  # Ensure the list is not empty
         current_index += 1
-        if current_index >= len(vita_images):  # If images are finished, start over
+
+        # If images are finished, start over
+        if current_index >= len(vita_images):  
             current_index = 0
             random.shuffle(vita_images)  # Shuffle again
 
@@ -90,7 +128,7 @@ def show_next_image():
 
         # Display the image on the canvas
         placeholder_2.delete("all")
-        placeholder_2.create_image(0, 0, anchor="nw", image=img_tk)
+        placeholder_2.create_image(50, 60, image=img_tk)
         placeholder_2.image = img_tk  # Keep reference to avoid garbage collection
 
 
@@ -113,6 +151,7 @@ def validate_first_column():
 
     # Enable or disable the "Next" button based on validation
     next_button.config(state="normal" if all_valid else "disabled")
+
 
 def reset_all_inputs():
     """Resets all Comboboxes and Sliders."""
@@ -141,7 +180,7 @@ def show_next_image():
 
         # Display the image on the canvas
         placeholder_2.delete("all")
-        placeholder_2.create_image(0, 0, anchor="nw", image=img_tk)
+        placeholder_2.create_image(50, 60, image=img_tk)
         placeholder_2.image = img_tk  # Keep reference to avoid garbage collection
 
         # Reset all Comboboxes and Sliders
@@ -150,7 +189,9 @@ def show_next_image():
         # Disable the "Next" button if the first column is not filled
         next_button.config(state="disabled")
         validate_first_column()  # Automatically validate if the first column is filled
-    else:  # All images have been shown
+
+    else:  
+        # All images have been shown
         save_results_to_excel()
         next_button.config(state="disabled")  # Disable "Next"
         reset_button.config(state="normal")  # Enable "Reset all"
@@ -180,6 +221,7 @@ def reset_cycle():
 def initialize_results_matrix():
     global results_matrix
     results_matrix = [[None] * 6 for _ in color_labels]  # 6 columns for each tooth
+
 
 def update_results_matrix(diente):
     """Updates the results matrix with the values from dropdowns and sliders."""
@@ -266,12 +308,14 @@ frame.pack(pady=10, padx=10)
 # Global variable to store the user's name
 user_name = ""
 results_matrix = [] 
+original_position_img_1 = (50, 60)
+image_id = None
 
-# Ask for the user's name at the start
+# Ask for the user's ID at the start
 ask_user_name()
 
 # Variable to store the selected option
-image_source = tk.StringVar(value="tooth")  # By default, use 'Reference Tooth'
+image_source = tk.StringVar(value="tooth")  # By default, use 'Vita Tooth'
 
 # Create the images and assign checkboxes
 color_labels = ["A1", "A2", "A3", "A3_5", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4", "D2", "D4"]
@@ -279,13 +323,14 @@ image_dir = os.path.join(os.getcwd(), "Datasets", "reference_colors")  # Initial
 vita_dir = os.path.join(os.getcwd(), "Datasets", "vita_tooth")  # Image directory for 'Image 2'
 image_files = [f"{label}.png" for label in color_labels]
 
+# Create matrix to save results
 initialize_results_matrix()
 
 # Load images
 images = [tk.PhotoImage(file=os.path.join(image_dir, image)) for image in image_files]
 
 # Shared variable for the checkboxes
-selected_color = tk.StringVar(value="")  # Will hold the selected checkbox value
+selected_color = tk.StringVar(value="")  
 
 # Create containers for images and checkboxes
 for idx, (color, img) in enumerate(zip(color_labels, images)):
@@ -302,7 +347,7 @@ for idx, (color, img) in enumerate(zip(color_labels, images)):
         text=color, 
         variable=selected_color, 
         value=color, 
-        command=update_image_from_selection  # Call the function when selected
+        command=update_image_from_selection  
     )
     chk.pack()
 
@@ -315,14 +360,14 @@ center_frame = tk.Frame(main_center_frame)
 center_frame.grid(row=0, column=0, padx=10)
 
 # Reduce top spacers to bring down the images
-tk.Label(center_frame, height=7).grid(row=0, column=0, columnspan=2)  # Reduce spacer height
+tk.Label(center_frame, height=7).grid(row=0, column=0, columnspan=2)  
 
 # Placeholder for "Image 1"
-placeholder_1 = tk.Canvas(center_frame, width=100, height=100, bg="SystemButtonFace", highlightthickness=0)
+placeholder_1 = tk.Canvas(center_frame, width=100, height=120, bg="SystemButtonFace", highlightthickness=0)
 placeholder_1.grid(row=1, column=0, padx=10, pady=10)
 
-# Placeholder for "Image 2" (unchanged)
-placeholder_2 = tk.Canvas(center_frame, width=100, height=100, bg="SystemButtonFace", highlightthickness=0)
+# Placeholder for "Image 2" 
+placeholder_2 = tk.Canvas(center_frame, width=100, height=120, bg="SystemButtonFace", highlightthickness=0)
 placeholder_2.grid(row=1, column=1, padx=10, pady=10)
 
 # Buttons and checkboxes under the central images
@@ -350,8 +395,6 @@ first_column_scales = []
 
 # Row names
 row_names = ["Upper Tooth", "Central Tooth", "Lower Tooth"]
-
-# Create sliders for the corresponding rows
 for row_idx, row_name in enumerate(row_names):
     # Label for each row
     row_label = tk.Label(sliders_frame, text=row_name, font=("Arial", 10, "bold"))
@@ -398,20 +441,22 @@ current_index = -1
 reference_options_frame = tk.Frame(buttons_frame)
 reference_options_frame.grid(row=1, column=0, columnspan=2, pady=10)
 
+# When selected, image_source will be "tooth"
 tk.Radiobutton(
     reference_options_frame,
     text="Reference Tooth",
     variable=image_source,
-    value="tooth",  # When selected, image_source will be "tooth"
-    command=update_image_source  # Call update_image_source when selected
+    value="tooth",  
+    command=update_image_source  
 ).grid(row=0, column=0, padx=10)
 
+# When selected, image_source will be "color"
 tk.Radiobutton(
     reference_options_frame,
     text="Reference Color",
     variable=image_source,
-    value="color",  # When selected, image_source will be "color"
-    command=update_image_source  # Call update_image_source when selected
+    value="color",  
+    command=update_image_source  
 ).grid(row=0, column=1, padx=10)
 
 # Load the images at the start
