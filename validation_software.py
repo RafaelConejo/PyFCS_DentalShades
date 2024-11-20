@@ -1,18 +1,22 @@
-import tkinter as tk
-from tkinter import ttk, simpledialog, messagebox
-from PIL import Image, ImageTk
 import os
 import sys
 import random
+import tkinter as tk
 from openpyxl import Workbook, load_workbook
+from tkinter import ttk, simpledialog, messagebox
+from PIL import Image, ImageTk
 
 current_dir = os.path.dirname(__file__)
 sys.path.append(current_dir)
 
-# Create main window
+############################################################ Main Windown ############################################################
+
 root = tk.Tk()
-root.geometry("1200x900") 
+root.geometry("1200x800") 
 root.title("Color Selector")
+
+
+############################################################ Funcions ############################################################
 
 def ask_user_name():
     """Asks the user to enter a name."""
@@ -25,70 +29,53 @@ def ask_user_name():
 
 # Function to load the corresponding image from the 15 selected options
 def update_image_from_selection():
-    global image_id
-    selected_label = selected_color.get()  # Get the selected label (e.g., "A1", "B2", etc.)
+    global image_id1
+    selected_label = selected_color.get()
     
-    # If no selection is made, clear the placeholder
     if not selected_label:
-        placeholder_1.delete("all")  # Clear content of Image 1
-        placeholder_1.create_text(50, 60, text=" ")  
+        shared_canvas.delete("image1")  # Borrar solo la imagen 1
         return
     
-    # Determine the directory based on the selected option (tooth or reference)
-    if image_source.get() == "tooth":
-        directory = "Datasets/vita_tooth_test"  
-    else:
-        directory = "Datasets/reference_colors"  
-
-    # Build the image path
+    directory = "Datasets/vita_tooth_test" if image_source.get() == "tooth" else "Datasets/reference_colors"
+    new_size = (77,112) if directory == "Datasets/vita_tooth_test" else (50,50)
     image_path = os.path.join(directory, f"{selected_label}.png")
-
-    # Check if the image exists in the directory
+    
     if os.path.exists(image_path):
-        # Load the image and preserve transparency
-        img = Image.open(image_path).convert("RGBA")
-        img_resized = img.resize((77, 112), Image.Resampling.LANCZOS)  # Resize the image
-        img_tk = ImageTk.PhotoImage(img_resized)  # Convert the image to Tkinter format
+        img = Image.open(image_path).convert("RGBA").resize((new_size), Image.Resampling.LANCZOS)
+        img_tk = ImageTk.PhotoImage(img)
+        shared_canvas.delete("image1")  # Borrar cualquier imagen previa
+        shared_canvas.image1 = img_tk  # Guardar referencia
+        image_id1 = shared_canvas.create_image(*coords_img1, image=img_tk, tag="image1")
 
-        # Clear the canvas before adding the new image
-        placeholder_1.delete("all")
-        placeholder_1.image = img_tk  # Keep the reference to avoid garbage collection
-        image_id = placeholder_1.create_image(50, 60, image=img_tk)  # Draw the image on the canvas
-
-        # Link click with move
-        placeholder_1.bind("<ButtonPress-1>", on_image_press)  # When the user presses the mouse
-        placeholder_1.bind("<B1-Motion>", on_image_drag)      # When the user drags the image
-        placeholder_1.bind("<ButtonRelease-1>", on_image_release)
-        
+        shared_canvas.bind("<ButtonPress-1>", on_image_press)
+        shared_canvas.bind("<B1-Motion>", on_image_drag)
+        shared_canvas.bind("<ButtonRelease-1>", on_image_release)
     else:
-        # If the image is not found, show an error message
-        messagebox.showerror("Error", f"Image not found: {image_path}")
-        placeholder_1.delete("all")
-        placeholder_1.create_text(50, 60, text="Image not found")
+        shared_canvas.delete("image1")
+        shared_canvas.create_text(*coords_img1, text=" ", tag="image1")
+
 
 def on_image_press(event):
     global offset_x, offset_y
-    # Guardamos las coordenadas iniciales donde el usuario hace clic (coordenadas globales)
-    offset_x = event.x_root  # Coordenada X global
-    offset_y = event.y_root  # Coordenada Y global
+    # Guardar las coordenadas iniciales del clic dentro del Canvas
+    offset_x = event.x
+    offset_y = event.y
 
 def on_image_drag(event):
     global offset_x, offset_y
-    # Calculamos el desplazamiento de la imagen en relación con las coordenadas globales
-    dx = event.x_root - offset_x
-    dy = event.y_root - offset_y
-    
-    # Mover la imagen dentro del Canvas
-    placeholder_1.move(image_id, dx, dy)
-    
-    # Actualizamos la posición de la imagen para el próximo movimiento
-    offset_x = event.x_root
-    offset_y = event.y_root
+    # Mover la imagen izquierda dentro del Canvas si el clic fue sobre ella
+    canvas_items = shared_canvas.find_closest(event.x, event.y)
+    if canvas_items and canvas_items[0] == image_id1:
+        dx = event.x - offset_x
+        dy = event.y - offset_y
+        shared_canvas.move(image_id1, dx, dy)
+        offset_x = event.x
+        offset_y = event.y
 
 def on_image_release(event):
-    global original_position_img_1, image_id, offset_x, offset_y
-    # Volver a la posición original de la imagen cuando se suelta el clic
-    placeholder_1.coords(image_id, original_position_img_1[0], original_position_img_1[1])
+    global original_position_left_image, image_id1
+    # Volver a la posición original de la imagen izquierda
+    shared_canvas.coords(image_id1, original_position_left_image[0], original_position_left_image[1])
 
 
 # Function to update images according to the selected Radiobutton
@@ -110,26 +97,41 @@ def load_vita_images():
             vita_images.append((filename, ImageTk.PhotoImage(img)))  # Save the name and image
 
     # Shuffle images at the start
-    random.shuffle(vita_images)
+    random.shuffle(vita_images)        
+
 
 def show_next_image():
-    """Shows the next random image in Image 2."""
+    """Shows the next random image in Image 2 and resets the values."""
     global current_index
-    if vita_images:  # Ensure the list is not empty
-        current_index += 1
 
-        # If images are finished, start over
-        if current_index >= len(vita_images):  
-            current_index = 0
-            random.shuffle(vita_images)  # Shuffle again
+    # Save results of the current case
+    if current_index >= 0:
+        current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
+        update_results_matrix(current_tooth)
 
-        # Get the current image
+    # Move to the next index
+    current_index += 1
+
+    if current_index < len(vita_images):  # If there are still images available
         _, img_tk = vita_images[current_index]
 
         # Display the image on the canvas
-        placeholder_2.delete("all")
-        placeholder_2.create_image(50, 60, image=img_tk)
-        placeholder_2.image = img_tk  # Keep reference to avoid garbage collection
+        shared_canvas.delete("image2")  # Borrar cualquier imagen previa
+        shared_canvas.image2 = img_tk  # Guardar referencia
+        shared_canvas.create_image(*coords_img2, image=img_tk, tag="image2")
+
+        # Reset all Comboboxes and Sliders
+        reset_all_inputs()
+
+        # Disable the "Next" button if the first column is not filled
+        next_button.config(state="disabled")
+        validate_first_column()  # Automatically validate if the first column is filled
+
+    else:  
+        # All images have been shown
+        save_results_to_excel()
+        next_button.config(state="disabled")  # Disable "Next"
+        reset_button.config(state="normal")  # Enable "Reset all"
 
 
 def validate_first_column():
@@ -163,39 +165,6 @@ def reset_all_inputs():
     for scale in all_scales:
         scale.set(0)  # Initial value
 
-def show_next_image():
-    """Shows the next random image in Image 2 and resets the values."""
-    global current_index
-
-    # Save results of the current case
-    if current_index >= 0:
-        current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
-        update_results_matrix(current_tooth)
-
-    # Move to the next index
-    current_index += 1
-
-    if current_index < len(vita_images):  # If there are still images available
-        _, img_tk = vita_images[current_index]
-
-        # Display the image on the canvas
-        placeholder_2.delete("all")
-        placeholder_2.create_image(50, 60, image=img_tk)
-        placeholder_2.image = img_tk  # Keep reference to avoid garbage collection
-
-        # Reset all Comboboxes and Sliders
-        reset_all_inputs()
-
-        # Disable the "Next" button if the first column is not filled
-        next_button.config(state="disabled")
-        validate_first_column()  # Automatically validate if the first column is filled
-
-    else:  
-        # All images have been shown
-        save_results_to_excel()
-        next_button.config(state="disabled")  # Disable "Next"
-        reset_button.config(state="normal")  # Enable "Reset all"
-
 
 def reset_cycle():
     """Resets the image cycle and controls."""
@@ -211,7 +180,7 @@ def reset_cycle():
     # Shuffle images again
     random.shuffle(vita_images)  
     current_index = -1  # Reset index
-    placeholder_2.delete("all")  # Clear the second image canvas
+    shared_canvas.delete("image2")  # Clear the second image canvas
     next_button.config(state="normal")  # Enable the "Next" button
     reset_button.config(state="disabled")  # Disable the "Reset all" button
     show_next_image()
@@ -235,21 +204,32 @@ def update_results_matrix(diente):
         return
 
     # Extract values from the dropdowns and sliders
-    upper_value = first_column_comboboxes[0].get()
-    upper_confidence = first_column_scales[0].get()
+    upper_value = [all_comboboxes[0].get(), 
+                   all_comboboxes[1].get(), 
+                   all_comboboxes[2].get()]
 
-    central_value = first_column_comboboxes[1].get()
-    central_confidence = first_column_scales[1].get()
+    upper_confidence = [all_scales[0].get(), 
+                        all_scales[1].get(), 
+                        all_scales[2].get()]
 
-    lower_value = first_column_comboboxes[2].get()
-    lower_confidence = first_column_scales[2].get()
+    central_value = [all_comboboxes[3].get(), 
+                     all_comboboxes[4].get(), 
+                     all_comboboxes[5].get()]
+
+    central_confidence = [all_scales[3].get(), 
+                          all_scales[4].get(), 
+                          all_scales[5].get()]
+
+    lower_value = [all_comboboxes[6].get(), 
+                   all_comboboxes[7].get(), 
+                   all_comboboxes[8].get()]
+
+    lower_confidence = [all_scales[6].get(), 
+                        all_scales[7].get(), 
+                        all_scales[8].get()]
 
     # Update the corresponding row
-    results_matrix[row_index] = [
-        upper_value, upper_confidence,
-        central_value, central_confidence,
-        lower_value, lower_confidence
-    ]
+    results_matrix[row_index] = upper_value + upper_confidence + central_value + central_confidence + lower_value + lower_confidence
 
 
 def save_results_to_excel():
@@ -301,6 +281,8 @@ def save_results_to_excel():
 
 
 
+############################################################ INTERFACE ############################################################
+
 # Create the main frame for the colors
 frame = tk.Frame(root)
 frame.pack(pady=10, padx=10)
@@ -308,8 +290,8 @@ frame.pack(pady=10, padx=10)
 # Global variable to store the user's name
 user_name = ""
 results_matrix = [] 
-original_position_img_1 = (50, 60)
-image_id = None
+original_position_left_image = (150, 200)  # left image original position
+left_image_id = None  # ID left image
 
 # Ask for the user's ID at the start
 ask_user_name()
@@ -330,7 +312,7 @@ initialize_results_matrix()
 images = [tk.PhotoImage(file=os.path.join(image_dir, image)) for image in image_files]
 
 # Shared variable for the checkboxes
-selected_color = tk.StringVar(value="")  
+selected_color = tk.StringVar(value=0)  
 
 # Create containers for images and checkboxes
 for idx, (color, img) in enumerate(zip(color_labels, images)):
@@ -360,19 +342,19 @@ center_frame = tk.Frame(main_center_frame)
 center_frame.grid(row=0, column=0, padx=10)
 
 # Reduce top spacers to bring down the images
-tk.Label(center_frame, height=7).grid(row=0, column=0, columnspan=2)  
+tk.Label(center_frame, height=0).grid(row=0, column=0, columnspan=2)  
 
-# Placeholder for "Image 1"
-placeholder_1 = tk.Canvas(center_frame, width=100, height=120, bg="SystemButtonFace", highlightthickness=0)
-placeholder_1.grid(row=1, column=0, padx=10, pady=10)
+# Create canvas for two images
+shared_canvas = tk.Canvas(center_frame, width=440, height=400, bg="SystemButtonFace", highlightthickness=0)
+shared_canvas.grid(row=1, column=0, padx=10, pady=1, columnspan=2)
 
-# Placeholder for "Image 2" 
-placeholder_2 = tk.Canvas(center_frame, width=100, height=120, bg="SystemButtonFace", highlightthickness=0)
-placeholder_2.grid(row=1, column=1, padx=10, pady=10)
+# Coordenates of the two images 
+coords_img1 = original_position_left_image
+coords_img2 = (300, 200)  
 
 # Buttons and checkboxes under the central images
 buttons_frame = tk.Frame(center_frame)
-buttons_frame.grid(row=2, column=0, columnspan=2, pady=10)
+buttons_frame.grid(row=2, column=0, columnspan=2, pady=2)
 
 next_button = tk.Button(buttons_frame, text="Next", command=show_next_image)
 next_button.grid(row=0, column=0, columnspan=2, pady=5)
@@ -383,7 +365,7 @@ reset_button.grid(row=2, column=0, columnspan=2, pady=5)
 
 # Create the sliders with comboboxes to the right of the central images
 sliders_frame = tk.Frame(main_center_frame)
-sliders_frame.grid(row=0, column=1, padx=20)
+sliders_frame.grid(row=0, column=1, padx=10, pady=1)
 
 # Create global lists to store references to the Comboboxes and Sliders
 all_comboboxes = []  # All Comboboxes
@@ -398,12 +380,12 @@ row_names = ["Upper Tooth", "Central Tooth", "Lower Tooth"]
 for row_idx, row_name in enumerate(row_names):
     # Label for each row
     row_label = tk.Label(sliders_frame, text=row_name, font=("Arial", 10, "bold"))
-    row_label.grid(row=row_idx, column=0, padx=10, pady=5)
+    row_label.grid(row=row_idx, column=0, padx=10, pady=0) 
 
     # Add sliders and comboboxes in corresponding columns
     for col_idx in range(3):  # Three columns of sliders and comboboxes per row
         slider_frame = tk.Frame(sliders_frame)
-        slider_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=5)
+        slider_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=7)
 
         # Combobox
         combo = ttk.Combobox(slider_frame, values=color_labels, width=4, state="readonly")
