@@ -9,14 +9,12 @@ from PIL import Image, ImageTk
 current_dir = os.path.dirname(__file__)
 sys.path.append(current_dir)
 
-############################################################ Main Windown ############################################################
-
-root = tk.Tk()
-root.geometry("1200x800") 
-root.title("Color Selector")
-
 
 ############################################################ Funcions ############################################################
+
+def exit_fullscreen(event):
+    root.attributes('-fullscreen', False)
+
 
 def ask_user_name():
     """Asks the user to enter a name."""
@@ -27,7 +25,7 @@ def ask_user_name():
         ask_user_name()  # Ask for the name again
 
 
-# Function to load the corresponding image from the 15 selected options
+# Function to load the corresponding image from the selected options
 def update_image_from_selection():
     global image_id1
     selected_label = selected_color.get()
@@ -229,7 +227,14 @@ def update_results_matrix(diente):
                         all_scales[8].get()]
 
     # Update the corresponding row
-    results_matrix[row_index] = upper_value + upper_confidence + central_value + central_confidence + lower_value + lower_confidence
+    results_matrix[row_index] = [
+    ', '.join(map(str, upper_value)),
+    ', '.join(map(str, upper_confidence)),
+    ', '.join(map(str, central_value)),
+    ', '.join(map(str, central_confidence)),
+    ', '.join(map(str, lower_value)),
+    ', '.join(map(str, lower_confidence))
+]
 
 
 def save_results_to_excel():
@@ -280,6 +285,14 @@ def save_results_to_excel():
 
 
 
+############################################################ Main Windown ############################################################
+
+root = tk.Tk()
+# root.geometry("1300x800") 
+root.attributes('-fullscreen', True)
+root.bind('<Escape>', exit_fullscreen)
+root.title("Color Selector")
+
 
 ############################################################ INTERFACE ############################################################
 
@@ -300,7 +313,7 @@ ask_user_name()
 image_source = tk.StringVar(value="tooth")  # By default, use 'Vita Tooth'
 
 # Create the images and assign checkboxes
-color_labels = ["A1", "A2", "A3", "A3_5", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4", "D2", "D4"]
+color_labels = ["A1", "A2", "A3", "A3_5", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4", "D2", "D3", "D4"]
 image_dir = os.path.join(os.getcwd(), "Datasets", "reference_colors")  # Initial image directory
 vita_dir = os.path.join(os.getcwd(), "Datasets", "vita_tooth")  # Image directory for 'Image 2'
 image_files = [f"{label}.png" for label in color_labels]
