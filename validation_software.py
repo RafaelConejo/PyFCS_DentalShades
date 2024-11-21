@@ -35,7 +35,7 @@ def update_image_from_selection():
         return
     
     directory = "Datasets/vita_tooth_test" if image_source.get() == "tooth" else "Datasets/reference_colors"
-    new_size = (77,112) if directory == "Datasets/vita_tooth_test" else (50,50)
+    new_size = (62,90) if directory == "Datasets/vita_tooth_test" else (50,50)
     image_path = os.path.join(directory, f"{selected_label}.png")
     
     if os.path.exists(image_path):
@@ -91,7 +91,7 @@ def load_vita_images():
         if filename.endswith(".png"):
             image_path = os.path.join(vita_dir, filename)
             img = Image.open(image_path).convert("RGBA")  # Load with transparency
-            img = img.resize((77, 112), Image.Resampling.LANCZOS)
+            img = img.resize((62, 90), Image.Resampling.LANCZOS)
             vita_images.append((filename, ImageTk.PhotoImage(img)))  # Save the name and image
 
     # Shuffle images at the start
