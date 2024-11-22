@@ -1,4 +1,4 @@
-numpy
-matplotlib
-scikit-image
-opencv-python
+random
+tk
+openpyxl
+pillow

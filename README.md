@@ -7,7 +7,6 @@ The **VITA Validation Software** is a Python-based application designed for dent
 ### Features
 - Randomized selection of tooth samples from the VITA Classical shade guide.
 - Input interface for selecting the predicted shade and confidence level.
-- Validation and logging of user predictions.
 
 ### Installation
 
