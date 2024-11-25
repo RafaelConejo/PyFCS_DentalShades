@@ -121,6 +121,9 @@ def show_next_image():
         # Reset all Comboboxes and Sliders
         reset_all_inputs()
 
+        # Enable "Previous" button since we're no longer at the first image
+        prev_button.config(state="normal")
+
         # Disable the "Next" button if the first column is not filled
         next_button.config(state="disabled")
         validate_first_column()  # Automatically validate if the first column is filled
@@ -128,8 +131,81 @@ def show_next_image():
     else:  
         # All images have been shown
         save_results_to_excel()
+        prev_button.config(state="disabled")
         next_button.config(state="disabled")  # Disable "Next"
         reset_button.config(state="normal")  # Enable "Reset all"
+
+
+def show_previous_image():
+    """Shows the previous image and restores its values."""
+    global current_index
+
+    # Save results of the current case
+    if current_index >= 0:
+        current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
+        update_results_matrix(current_tooth)
+
+    # Move to the previous index
+    current_index -= 1
+
+    if current_index >= 0:
+        # Display the previous image
+        _, img_tk = vita_images[current_index]
+
+        # Update the canvas
+        shared_canvas.delete("image2")
+        shared_canvas.image2 = img_tk
+        shared_canvas.create_image(*coords_img2, image=img_tk, tag="image2")
+
+        # Restore saved values for this index
+        restore_previous_values()
+
+        # Enable "Next" button since we're no longer at the last image
+        next_button.config(state="normal")
+
+        # Disable "Previous" button 
+        prev_button.config(state="disabled")
+
+
+def restore_previous_values():
+    """Restores the dropdown and slider values for the current index."""
+    global results_matrix
+
+    # Retrieve current tooth label
+    current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
+
+    # Find the row in the results matrix
+    try:
+        row_index = color_labels.index(current_tooth)
+    except ValueError:
+        messagebox.showerror("Error", f"Tooth '{current_tooth}' not found in the list.")
+        return
+
+    # Retrieve saved values from the results matrix
+    if results_matrix[row_index]:
+        upper_value, upper_confidence, central_value, central_confidence, lower_value, lower_confidence = results_matrix[row_index]
+
+        # Restore values into the corresponding Comboboxes and Sliders
+        all_comboboxes[0].set(upper_value.split(", ")[0])
+        all_comboboxes[1].set(upper_value.split(", ")[1])
+        all_comboboxes[2].set(upper_value.split(", ")[2])
+        all_scales[0].set(float(upper_confidence.split(", ")[0]))
+        all_scales[1].set(float(upper_confidence.split(", ")[1]))
+        all_scales[2].set(float(upper_confidence.split(", ")[2]))
+
+        all_comboboxes[3].set(central_value.split(", ")[0])
+        all_comboboxes[4].set(central_value.split(", ")[1])
+        all_comboboxes[5].set(central_value.split(", ")[2])
+        all_scales[3].set(float(central_confidence.split(", ")[0]))
+        all_scales[4].set(float(central_confidence.split(", ")[1]))
+        all_scales[5].set(float(central_confidence.split(", ")[2]))
+
+        all_comboboxes[6].set(lower_value.split(", ")[0])
+        all_comboboxes[7].set(lower_value.split(", ")[1])
+        all_comboboxes[8].set(lower_value.split(", ")[2])
+        all_scales[6].set(float(lower_confidence.split(", ")[0]))
+        all_scales[7].set(float(lower_confidence.split(", ")[1]))
+        all_scales[8].set(float(lower_confidence.split(", ")[2]))
 
 
 def validate_first_column():
@@ -182,6 +258,7 @@ def reset_cycle():
     next_button.config(state="normal")  # Enable the "Next" button
     reset_button.config(state="disabled")  # Disable the "Reset all" button
     show_next_image()
+    prev_button.config(state="disabled")
 
 
 # Initialize results matrix with empty rows
@@ -369,8 +446,11 @@ coords_img2 = (300, 200)
 buttons_frame = tk.Frame(center_frame)
 buttons_frame.grid(row=2, column=0, columnspan=2, pady=2)
 
+prev_button = tk.Button(buttons_frame, text="Previous", command=show_previous_image, state="disabled")
+prev_button.grid(row=0, column=0, padx=10)
+
 next_button = tk.Button(buttons_frame, text="Next", command=show_next_image)
-next_button.grid(row=0, column=0, columnspan=2, pady=5)
+next_button.grid(row=0, column=1, padx=10)
 
 # "Reset all" button to restart the cycle
 reset_button = tk.Button(buttons_frame, text="Reset all", command=reset_cycle, state="disabled")
@@ -460,6 +540,7 @@ update_image_from_selection()
 
 # Show the first random image
 show_next_image()
+prev_button.config(state="disabled")
 
 # Run the interface
 root.mainloop()
