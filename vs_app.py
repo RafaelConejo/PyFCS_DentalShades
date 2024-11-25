@@ -16,6 +16,25 @@ def exit_fullscreen(event):
     root.attributes('-fullscreen', False)
 
 
+def update_counter_label():
+    """Updates the counter label with the current file number."""
+    counter_label.config(text=f"{current_file_index}/{total_files}")
+
+def next_file():
+    """Moves to the next file, if possible."""
+    global current_file_index
+    if current_file_index < total_files:
+        current_file_index += 1
+        update_counter_label()
+
+def previous_file():
+    """Moves to the previous file, if possible."""
+    global current_file_index
+    if current_file_index > 0:
+        current_file_index -= 1
+        update_counter_label()
+
+
 def ask_user_name():
     """Asks the user to enter a name."""
     global user_name
@@ -109,8 +128,10 @@ def show_next_image():
 
     # Move to the next index
     current_index += 1
+    next_file()
 
-    if current_index < len(vita_images):  # If there are still images available
+    # If there are still images available
+    if current_index < len(vita_images):  
         _, img_tk = vita_images[current_index]
 
         # Display the image on the canvas
@@ -118,14 +139,18 @@ def show_next_image():
         shared_canvas.image2 = img_tk  # Guardar referencia
         shared_canvas.create_image(*coords_img2, image=img_tk, tag="image2")
 
-        # Reset all Comboboxes and Sliders
-        reset_all_inputs()
+        # Restore saved values or reset inputs
+        current_tooth = vita_images[current_index][0].split(".")[0] 
+        current_idx_t = color_labels.index(current_tooth)
+        current_row = results_matrix[current_idx_t]
+        if current_row and any(value is not None for value in current_row):
+            restore_previous_values(current_tooth)
+        else:
+            reset_all_inputs()
 
-        # Enable "Previous" button since we're no longer at the first image
-        prev_button.config(state="normal")
-
-        # Disable the "Next" button if the first column is not filled
-        next_button.config(state="disabled")
+        # Update button states
+        prev_button.config(state="normal" if current_index > 0 else "disabled")
+        next_button.config(state="normal" if current_index < len(vita_images) - 1 else "disabled")
         validate_first_column()  # Automatically validate if the first column is filled
 
     else:  
@@ -140,72 +165,82 @@ def show_previous_image():
     """Shows the previous image and restores its values."""
     global current_index
 
-    # Save results of the current case
-    if current_index >= 0:
-        current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
+    if current_index > 0:  # Prevent going to negative indices
+        # Save current results
+        current_tooth = vita_images[current_index][0].split(".")[0]
         update_results_matrix(current_tooth)
 
-    # Move to the previous index
-    current_index -= 1
+        # Move to the previous index
+        current_index -= 1
 
-    if current_index >= 0:
         # Display the previous image
         _, img_tk = vita_images[current_index]
-
-        # Update the canvas
         shared_canvas.delete("image2")
         shared_canvas.image2 = img_tk
         shared_canvas.create_image(*coords_img2, image=img_tk, tag="image2")
 
-        # Restore saved values for this index
-        restore_previous_values()
+        # Restore the values for the current image
+        current_tooth = vita_images[current_index][0].split(".")[0]
+        restore_previous_values(current_tooth)
 
-        # Enable "Next" button since we're no longer at the last image
-        next_button.config(state="normal")
+    # Update button states
+    prev_button.config(state="normal" if current_index > 0 else "disabled")
+    next_button.config(state="normal" if current_index < len(vita_images) - 1 else "disabled")
+    previous_file()
 
-        # Disable "Previous" button 
-        prev_button.config(state="disabled")
 
-
-def restore_previous_values():
-    """Restores the dropdown and slider values for the current index."""
+def restore_previous_values(current_tooth):
+    """Restores the dropdown and slider values for the current index or resets inputs if no values exist."""
     global results_matrix
 
-    # Retrieve current tooth label
-    current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
-
-    # Find the row in the results matrix
     try:
-        row_index = color_labels.index(current_tooth)
+        # Retrieve the index for the given tooth
+        current_index = color_labels.index(current_tooth)
     except ValueError:
         messagebox.showerror("Error", f"Tooth '{current_tooth}' not found in the list.")
         return
 
-    # Retrieve saved values from the results matrix
-    if results_matrix[row_index]:
-        upper_value, upper_confidence, central_value, central_confidence, lower_value, lower_confidence = results_matrix[row_index]
+    # Retrieve the current row in the results matrix
+    current_row = results_matrix[current_index]
 
-        # Restore values into the corresponding Comboboxes and Sliders
-        all_comboboxes[0].set(upper_value.split(", ")[0])
-        all_comboboxes[1].set(upper_value.split(", ")[1])
-        all_comboboxes[2].set(upper_value.split(", ")[2])
-        all_scales[0].set(float(upper_confidence.split(", ")[0]))
-        all_scales[1].set(float(upper_confidence.split(", ")[1]))
-        all_scales[2].set(float(upper_confidence.split(", ")[2]))
+    # Check if the current row has any non-None values
+    if current_row and any(value is not None for value in current_row):
+        # Extract saved values from the matrix row
+        upper_value, upper_confidence, central_value, central_confidence, lower_value, lower_confidence = current_row
 
-        all_comboboxes[3].set(central_value.split(", ")[0])
-        all_comboboxes[4].set(central_value.split(", ")[1])
-        all_comboboxes[5].set(central_value.split(", ")[2])
-        all_scales[3].set(float(central_confidence.split(", ")[0]))
-        all_scales[4].set(float(central_confidence.split(", ")[1]))
-        all_scales[5].set(float(central_confidence.split(", ")[2]))
+        # Parse the string values back to lists
+        upper_value = upper_value.split(", ")
+        upper_confidence = list(map(float, upper_confidence.split(", ")))
+        central_value = central_value.split(", ")
+        central_confidence = list(map(float, central_confidence.split(", ")))
+        lower_value = lower_value.split(", ")
+        lower_confidence = list(map(float, lower_confidence.split(", ")))
 
-        all_comboboxes[6].set(lower_value.split(", ")[0])
-        all_comboboxes[7].set(lower_value.split(", ")[1])
-        all_comboboxes[8].set(lower_value.split(", ")[2])
-        all_scales[6].set(float(lower_confidence.split(", ")[0]))
-        all_scales[7].set(float(lower_confidence.split(", ")[1]))
-        all_scales[8].set(float(lower_confidence.split(", ")[2]))
+        # Restore the dropdowns and sliders
+        all_comboboxes[0].set(upper_value[0])
+        all_comboboxes[1].set(upper_value[1])
+        all_comboboxes[2].set(upper_value[2])
+        all_scales[0].set(upper_confidence[0])
+        all_scales[1].set(upper_confidence[1])
+        all_scales[2].set(upper_confidence[2])
+
+        all_comboboxes[3].set(central_value[0])
+        all_comboboxes[4].set(central_value[1])
+        all_comboboxes[5].set(central_value[2])
+        all_scales[3].set(central_confidence[0])
+        all_scales[4].set(central_confidence[1])
+        all_scales[5].set(central_confidence[2])
+
+        all_comboboxes[6].set(lower_value[0])
+        all_comboboxes[7].set(lower_value[1])
+        all_comboboxes[8].set(lower_value[2])
+        all_scales[6].set(lower_confidence[0])
+        all_scales[7].set(lower_confidence[1])
+        all_scales[8].set(lower_confidence[2])
+    else:
+        # If the row is empty or contains only None, reset all inputs
+        reset_all_inputs()
+
 
 
 def validate_first_column():
@@ -382,6 +417,7 @@ user_name = ""
 results_matrix = [] 
 original_position_left_image = (150, 200)  # left image original position
 left_image_id = None  # ID left image
+current_file_index = 0
 
 # Ask for the user's ID at the start
 ask_user_name()
@@ -394,6 +430,8 @@ color_labels = ["A1", "A2", "A3", "A3_5", "A4", "B1", "B2", "B3", "B4", "C1", "C
 image_dir = os.path.join(os.getcwd(), "Datasets", "reference_colors")  # Initial image directory
 vita_dir = os.path.join(os.getcwd(), "Datasets", "vita_tooth")  # Image directory for 'Image 2'
 image_files = [f"{label}.png" for label in color_labels]
+
+total_files = len([f for f in os.listdir(vita_dir) if os.path.isfile(os.path.join(vita_dir, f))])
 
 # Create matrix to save results
 initialize_results_matrix()
@@ -444,17 +482,20 @@ coords_img2 = (300, 200)
 
 # Buttons and checkboxes under the central images
 buttons_frame = tk.Frame(center_frame)
-buttons_frame.grid(row=2, column=0, columnspan=2, pady=2)
+buttons_frame.grid(row=3, column=0, columnspan=2, pady=2)
+
+counter_label = tk.Label(buttons_frame, text="1/16", font=("Arial", 10))
+counter_label.grid(row=0, column=0, columnspan=2, pady=5)
 
 prev_button = tk.Button(buttons_frame, text="Previous", command=show_previous_image, state="disabled")
-prev_button.grid(row=0, column=0, padx=10)
+prev_button.grid(row=1, column=0, padx=10)
 
 next_button = tk.Button(buttons_frame, text="Next", command=show_next_image)
-next_button.grid(row=0, column=1, padx=10)
+next_button.grid(row=1, column=1, padx=10)
 
 # "Reset all" button to restart the cycle
 reset_button = tk.Button(buttons_frame, text="Reset all", command=reset_cycle, state="disabled")
-reset_button.grid(row=2, column=0, columnspan=2, pady=5)
+reset_button.grid(row=3, column=0, columnspan=2, pady=5)
 
 # Create the sliders with comboboxes to the right of the central images
 sliders_frame = tk.Frame(main_center_frame)
@@ -514,7 +555,7 @@ current_index = -1
 
 # Create Radiobuttons to select the reference type
 reference_options_frame = tk.Frame(buttons_frame)
-reference_options_frame.grid(row=1, column=0, columnspan=2, pady=10)
+reference_options_frame.grid(row=2, column=0, columnspan=2, pady=10)
 
 # When selected, image_source will be "tooth"
 tk.Radiobutton(
