@@ -151,6 +151,7 @@ def show_next_image():
         # Update button states
         prev_button.config(state="normal" if current_index > 0 else "disabled")
         next_button.config(state="normal" if current_index < len(vita_images) - 1 else "disabled")
+        update_image_from_selection()
         validate_first_column()  # Automatically validate if the first column is filled
 
     else:  
@@ -182,6 +183,7 @@ def show_previous_image():
         # Restore the values for the current image
         current_tooth = vita_images[current_index][0].split(".")[0]
         restore_previous_values(current_tooth)
+        update_image_from_selection()
 
     # Update button states
     prev_button.config(state="normal" if current_index > 0 else "disabled")
