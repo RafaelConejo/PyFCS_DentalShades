@@ -154,12 +154,16 @@ def show_next_image():
         update_image_from_selection()
         validate_first_column()  # Automatically validate if the first column is filled
 
-    else:  
-        # All images have been shown
-        save_results_to_excel()
-        prev_button.config(state="disabled")
-        next_button.config(state="disabled")  # Disable "Next"
-        reset_button.config(state="normal")  # Enable "Reset all"
+    else:
+        # All images have been shown, ask user if they want to finalize
+        finalize = messagebox.askyesno("Finalize", "Your selections will be saved. Do you want to finalize?")
+        if finalize:
+            save_results_to_excel()
+            prev_button.config(state="disabled")
+            next_button.config(state="disabled")  # Disable "Next"
+            reset_button.config(state="normal")  # Enable "Reset all"
+        else:
+            current_index -= 1  # Return to the last index
 
 
 def show_previous_image():
