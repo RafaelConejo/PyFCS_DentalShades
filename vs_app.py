@@ -5,6 +5,7 @@ import tkinter as tk
 from openpyxl import Workbook, load_workbook
 from tkinter import ttk, simpledialog, messagebox
 from PIL import Image, ImageTk
+import time
 
 current_dir = os.path.dirname(__file__)
 sys.path.append(current_dir)
@@ -119,7 +120,7 @@ def load_vita_images():
 
 def show_next_image():
     """Shows the next random image in Image 2 and resets the values."""
-    global current_index
+    global current_index, last_time, time_matrix
 
     # Save results of the current case
     if current_index >= 0:
@@ -146,6 +147,7 @@ def show_next_image():
         if current_row and any(value is not None for value in current_row):
             restore_previous_values(current_tooth)
         else:
+            next_file_timer(current_row)
             reset_all_inputs()
 
         # Update button states
@@ -308,6 +310,11 @@ def initialize_results_matrix():
     results_matrix = [[None] * 6 for _ in color_labels]  # 6 columns for each tooth
 
 
+def initialize_time_matrix():
+    global time_matrix
+    time_matrix = [[None] for _ in color_labels]  
+
+
 def update_results_matrix(diente):
     """Updates the results matrix with the values from dropdowns and sliders."""
     global results_matrix
@@ -400,6 +407,43 @@ def save_results_to_excel():
 
 
 
+def save_time_to_excel():
+    """Guarda la matriz de tiempos en el archivo Excel."""
+    global user_name, time_matrix
+
+    # Archivo y hoja
+    file_name = "Results.xlsx"
+    sheet_name = f"{user_name}_Time"
+
+    # Crea el archivo si no existe
+    if not os.path.exists(file_name):
+        wb = Workbook()
+        wb.save(file_name)
+
+    # Carga el archivo existente
+    wb = load_workbook(file_name)
+
+    # Si la hoja ya existe, añade un sufijo incremental
+    original_sheet_name = sheet_name
+    counter = 1
+    while sheet_name in wb.sheetnames:
+        sheet_name = f"{original_sheet_name}_{counter}"
+        counter += 1
+
+    # Crea una nueva hoja
+    ws = wb.create_sheet(title=sheet_name)
+
+    # Añade encabezados
+    ws.append(["Row Name", "Elapsed Time (seconds)"])
+
+    # Escribe los tiempos en el Excel
+    for row_name, elapsed_time in zip(color_labels, time_matrix):
+        ws.append([row_name, elapsed_time])
+
+    # Guarda el archivo
+    wb.save(file_name)
+    messagebox.showinfo("Success", f"Time results saved to {file_name}.")
+
 
 
 
@@ -410,6 +454,9 @@ root = tk.Tk()
 root.attributes('-fullscreen', True)
 root.bind('<Escape>', exit_fullscreen)
 root.title("Color Selector")
+
+start_time = None
+time_matrix = []
 
 
 ############################################################ INTERFACE ############################################################
