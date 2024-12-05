@@ -117,10 +117,16 @@ def load_vita_images():
     # Shuffle images at the start
     random.shuffle(vita_images)        
 
+def next_file_timer():
+    global start_time
+    if start_time is None:
+        return 0  
+    return time.time() - start_time
+
 
 def show_next_image():
     """Shows the next random image in Image 2 and resets the values."""
-    global current_index, last_time, time_matrix
+    global current_index, time_matrix
 
     # Save results of the current case
     if current_index >= 0:
@@ -147,7 +153,10 @@ def show_next_image():
         if current_row and any(value is not None for value in current_row):
             restore_previous_values(current_tooth)
         else:
-            next_file_timer(current_row)
+            current_time = next_file_timer()
+            row_index = color_labels.index(current_tooth)
+            time_matrix[row_index] = current_time
+
             reset_all_inputs()
 
         # Update button states
@@ -161,6 +170,8 @@ def show_next_image():
         finalize = messagebox.askyesno("Finalize", "Your selections will be saved. Do you want to finalize?")
         if finalize:
             save_results_to_excel()
+            save_time_to_excel()
+
             prev_button.config(state="disabled")
             next_button.config(state="disabled")  # Disable "Next"
             reset_button.config(state="normal")  # Enable "Reset all"
@@ -312,7 +323,7 @@ def initialize_results_matrix():
 
 def initialize_time_matrix():
     global time_matrix
-    time_matrix = [[None] for _ in color_labels]  
+    time_matrix = [None for _ in color_labels]
 
 
 def update_results_matrix(diente):
@@ -367,7 +378,7 @@ def save_results_to_excel():
     global user_name
 
     # File and sheet
-    file_name = "Results.xlsx"
+    file_name = "Results\Results.xlsx"
     sheet_name = user_name
 
     # Create file if it doesn't exist
@@ -408,11 +419,11 @@ def save_results_to_excel():
 
 
 def save_time_to_excel():
-    """Guarda la matriz de tiempos en el archivo Excel."""
+    """Saves the results Time matrix to an Excel file."""
     global user_name, time_matrix
 
     # Archivo y hoja
-    file_name = "Results.xlsx"
+    file_name = "Results\Time_Data.xlsx"
     sheet_name = f"{user_name}_Time"
 
     # Crea el archivo si no existe
@@ -434,11 +445,14 @@ def save_time_to_excel():
     ws = wb.create_sheet(title=sheet_name)
 
     # Añade encabezados
-    ws.append(["Row Name", "Elapsed Time (seconds)"])
+    ws.append(["Tooth", "Elapsed Time (seconds)"])
 
     # Escribe los tiempos en el Excel
-    for row_name, elapsed_time in zip(color_labels, time_matrix):
-        ws.append([row_name, elapsed_time])
+    for tooth_label, elapsed_time in zip(color_labels, time_matrix):
+            # Reemplazar valores `None` con "N/A" u otro valor predeterminado
+            if elapsed_time is None:
+                elapsed_time = 0
+            ws.append([tooth_label, elapsed_time])
 
     # Guarda el archivo
     wb.save(file_name)
@@ -474,6 +488,7 @@ current_file_index = 0
 
 # Ask for the user's ID at the start
 ask_user_name()
+start_time = time.time()
 
 # Variable to store the selected option
 image_source = tk.StringVar(value="tooth")  # By default, use 'Vita Tooth'
@@ -488,6 +503,7 @@ total_files = len([f for f in os.listdir(vita_dir) if os.path.isfile(os.path.joi
 
 # Create matrix to save results
 initialize_results_matrix()
+initialize_time_matrix()
 
 # Load images
 images = [tk.PhotoImage(file=os.path.join(image_dir, image)) for image in image_files]
