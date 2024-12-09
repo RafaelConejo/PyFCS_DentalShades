@@ -133,6 +133,10 @@ def show_next_image():
         current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
         update_results_matrix(current_tooth)
 
+        current_time = next_file_timer()
+        row_index = color_labels.index(current_tooth)
+        time_matrix[row_index] = current_time
+
     # Move to the next index
     current_index += 1
     next_file()
@@ -152,11 +156,8 @@ def show_next_image():
         current_row = results_matrix[current_idx_t]
         if current_row and any(value is not None for value in current_row):
             restore_previous_values(current_tooth)
+            
         else:
-            current_time = next_file_timer()
-            row_index = color_labels.index(current_tooth)
-            time_matrix[row_index] = current_time
-
             reset_all_inputs()
 
         # Update button states
@@ -445,18 +446,26 @@ def save_time_to_excel():
     ws = wb.create_sheet(title=sheet_name)
 
     # Añade encabezados
-    ws.append(["Tooth", "Elapsed Time (seconds)"])
+    ws.append(["Tooth", "Elapsed Time (seconds)", "Elapsed Time (minutes)"])
 
     # Escribe los tiempos en el Excel
+    total_time = 0
     for tooth_label, elapsed_time in zip(color_labels, time_matrix):
-            # Reemplazar valores `None` con "N/A" u otro valor predeterminado
-            if elapsed_time is None:
-                elapsed_time = 0
-            ws.append([tooth_label, elapsed_time])
+        # Reemplazar valores `None` con 0
+        if elapsed_time is None:
+            elapsed_time = 0
+        elapsed_time_minutes = elapsed_time / 60  # Convertir a minutos
+        ws.append([tooth_label, elapsed_time, elapsed_time_minutes])
+        total_time += elapsed_time
+
+    # Añade una fila para el total
+    total_time_minutes = total_time / 60  # Convertir el total a minutos
+    ws.append(["Total", total_time, total_time_minutes])
 
     # Guarda el archivo
     wb.save(file_name)
-    messagebox.showinfo("Success", f"Time results saved to {file_name}.")
+
+
 
 
 

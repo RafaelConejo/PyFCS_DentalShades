@@ -159,28 +159,30 @@ def show_next_image():
         middle_values = current_row['middle']
         bottom_values = current_row['bottom']
 
-        all_comboboxes[0].set(top_values[0][0])  
-        all_comboboxes[1].set(top_values[1][0])  
-        all_comboboxes[2].set(top_values[2][0])  
-        all_scales[0].set(top_values[0][1])      
-        all_scales[1].set(top_values[1][1])      
-        all_scales[2].set(top_values[2][1])      
+        # Para "top"
+        all_static_texts[0].config(text=top_values[0][0])
+        all_static_texts[1].config(text=top_values[1][0])
+        all_static_texts[2].config(text=top_values[2][0])
+        radiobutton_values[0].set(top_values[0][1])
+        radiobutton_values[1].set(top_values[1][1])
+        radiobutton_values[2].set(top_values[2][1])
 
         # Para "middle"
-        all_comboboxes[3].set(middle_values[0][0])
-        all_comboboxes[4].set(middle_values[1][0])
-        all_comboboxes[5].set(middle_values[2][0])
-        all_scales[3].set(middle_values[0][1])
-        all_scales[4].set(middle_values[1][1])
-        all_scales[5].set(middle_values[2][1])
+        all_static_texts[3].config(text=middle_values[0][0])
+        all_static_texts[4].config(text=middle_values[1][0])
+        all_static_texts[5].config(text=middle_values[2][0])
+        radiobutton_values[3].set(middle_values[0][1])
+        radiobutton_values[4].set(middle_values[1][1])
+        radiobutton_values[5].set(middle_values[2][1])
 
         # Para "bottom"
-        all_comboboxes[6].set(bottom_values[0][0])
-        all_comboboxes[7].set(bottom_values[1][0])
-        all_comboboxes[8].set(bottom_values[2][0])
-        all_scales[6].set(bottom_values[0][1])
-        all_scales[7].set(bottom_values[1][1])
-        all_scales[8].set(bottom_values[2][1])
+        all_static_texts[6].config(text=bottom_values[0][0])
+        all_static_texts[7].config(text=bottom_values[1][0])
+        all_static_texts[8].config(text=bottom_values[2][0])
+        radiobutton_values[6].set(bottom_values[0][1])
+        radiobutton_values[7].set(bottom_values[1][1])
+        radiobutton_values[8].set(bottom_values[2][1])
+
         
         # CUANDO VAYA GUARDANDO LA DATA AQUI COMPRUEBO SI GUARDADA
         # if current_row and any(value is not None for value in current_row):
@@ -234,28 +236,30 @@ def show_previous_image():
         middle_values = current_row['middle']
         bottom_values = current_row['bottom']
 
-        all_comboboxes[0].set(top_values[0][0])  
-        all_comboboxes[1].set(top_values[1][0])  
-        all_comboboxes[2].set(top_values[2][0])  
-        all_scales[0].set(top_values[0][1])      
-        all_scales[1].set(top_values[1][1])      
-        all_scales[2].set(top_values[2][1])      
+        # Para "top"
+        all_static_texts[0].config(text=top_values[0][0])
+        all_static_texts[1].config(text=top_values[1][0])
+        all_static_texts[2].config(text=top_values[2][0])
+        radiobutton_values[0].set(top_values[0][1])
+        radiobutton_values[1].set(top_values[1][1])
+        radiobutton_values[2].set(top_values[2][1])
 
         # Para "middle"
-        all_comboboxes[3].set(middle_values[0][0])
-        all_comboboxes[4].set(middle_values[1][0])
-        all_comboboxes[5].set(middle_values[2][0])
-        all_scales[3].set(middle_values[0][1])
-        all_scales[4].set(middle_values[1][1])
-        all_scales[5].set(middle_values[2][1])
+        all_static_texts[3].config(text=middle_values[0][0])
+        all_static_texts[4].config(text=middle_values[1][0])
+        all_static_texts[5].config(text=middle_values[2][0])
+        radiobutton_values[3].set(middle_values[0][1])
+        radiobutton_values[4].set(middle_values[1][1])
+        radiobutton_values[5].set(middle_values[2][1])
 
         # Para "bottom"
-        all_comboboxes[6].set(bottom_values[0][0])
-        all_comboboxes[7].set(bottom_values[1][0])
-        all_comboboxes[8].set(bottom_values[2][0])
-        all_scales[6].set(bottom_values[0][1])
-        all_scales[7].set(bottom_values[1][1])
-        all_scales[8].set(bottom_values[2][1])
+        all_static_texts[6].config(text=bottom_values[0][0])
+        all_static_texts[7].config(text=bottom_values[1][0])
+        all_static_texts[8].config(text=bottom_values[2][0])
+        radiobutton_values[6].set(bottom_values[0][1])
+        radiobutton_values[7].set(bottom_values[1][1])
+        radiobutton_values[8].set(bottom_values[2][1])
+
 
         update_image_from_selection()
 
@@ -293,26 +297,30 @@ def restore_previous_values(current_tooth):
         lower_confidence = list(map(float, lower_confidence.split(", ")))
 
         # Restore the dropdowns and sliders
-        all_comboboxes[0].set(upper_value[0])
-        all_comboboxes[1].set(upper_value[1])
-        all_comboboxes[2].set(upper_value[2])
-        all_scales[0].set(upper_confidence[0])
-        all_scales[1].set(upper_confidence[1])
-        all_scales[2].set(upper_confidence[2])
+        # Para "top"
+        all_static_texts[0].config(text=top_values[0][0])
+        all_static_texts[1].config(text=top_values[1][0])
+        all_static_texts[2].config(text=top_values[2][0])
+        radiobutton_values[0].set(top_values[0][1])
+        radiobutton_values[1].set(top_values[1][1])
+        radiobutton_values[2].set(top_values[2][1])
 
-        all_comboboxes[3].set(central_value[0])
-        all_comboboxes[4].set(central_value[1])
-        all_comboboxes[5].set(central_value[2])
-        all_scales[3].set(central_confidence[0])
-        all_scales[4].set(central_confidence[1])
-        all_scales[5].set(central_confidence[2])
+        # Para "middle"
+        all_static_texts[3].config(text=middle_values[0][0])
+        all_static_texts[4].config(text=middle_values[1][0])
+        all_static_texts[5].config(text=middle_values[2][0])
+        radiobutton_values[3].set(middle_values[0][1])
+        radiobutton_values[4].set(middle_values[1][1])
+        radiobutton_values[5].set(middle_values[2][1])
 
-        all_comboboxes[6].set(lower_value[0])
-        all_comboboxes[7].set(lower_value[1])
-        all_comboboxes[8].set(lower_value[2])
-        all_scales[6].set(lower_confidence[0])
-        all_scales[7].set(lower_confidence[1])
-        all_scales[8].set(lower_confidence[2])
+        # Para "bottom"
+        all_static_texts[6].config(text=bottom_values[0][0])
+        all_static_texts[7].config(text=bottom_values[1][0])
+        all_static_texts[8].config(text=bottom_values[2][0])
+        radiobutton_values[6].set(bottom_values[0][1])
+        radiobutton_values[7].set(bottom_values[1][1])
+        radiobutton_values[8].set(bottom_values[2][1])
+
     else:
         # If the row is empty or contains only None, reset all inputs
         reset_all_inputs()
@@ -324,11 +332,11 @@ def validate_first_column():
     all_valid = True
 
     # Validate that all Sliders have a value greater than 0
-    if all_valid:  # Only continue if the Comboboxes are valid
-        for scale in additional_sliders:
-            if scale.get() == 0.0:  # Slider at its initial position
-                all_valid = False
-                break
+    # if all_valid:  # Only continue if the Comboboxes are valid
+    #     for scale in additional_sliders:
+    #         if scale.get() == 0.0:  # Slider at its initial position
+    #             all_valid = False
+    #             break
 
     # Enable or disable the "Next" button based on validation
     next_button.config(state="normal" if all_valid else "disabled")
@@ -337,8 +345,8 @@ def validate_first_column():
 def reset_all_inputs():
     """Resets all Comboboxes and Sliders."""
     # Reset all Sliders
-    for scale in additional_sliders:
-        scale.set(3)  # Initial value
+    # for scale in additional_sliders:
+    #     scale.set(3)  # Initial value
 
 
 def reset_cycle():
@@ -370,49 +378,7 @@ def initialize_results_matrix():
 
 def update_results_matrix(diente):
     """Updates the results matrix with the values from dropdowns and sliders."""
-    global results_matrix
 
-    # Find the row corresponding to the current tooth
-    try:
-        row_index = color_labels.index(diente)
-    except ValueError:
-        messagebox.showerror("Error", f"Tooth '{diente}' not found in the list.")
-        return
-
-    # Extract values from the dropdowns and sliders
-    upper_value = [all_comboboxes[0].get(), 
-                   all_comboboxes[1].get(), 
-                   all_comboboxes[2].get()]
-
-    upper_confidence = [all_scales[0].get(), 
-                        all_scales[1].get(), 
-                        all_scales[2].get()]
-
-    central_value = [all_comboboxes[3].get(), 
-                     all_comboboxes[4].get(), 
-                     all_comboboxes[5].get()]
-
-    central_confidence = [all_scales[3].get(), 
-                          all_scales[4].get(), 
-                          all_scales[5].get()]
-
-    lower_value = [all_comboboxes[6].get(), 
-                   all_comboboxes[7].get(), 
-                   all_comboboxes[8].get()]
-
-    lower_confidence = [all_scales[6].get(), 
-                        all_scales[7].get(), 
-                        all_scales[8].get()]
-
-    # Update the corresponding row
-    results_matrix[row_index] = [
-    ', '.join(map(str, upper_value)),
-    ', '.join(map(str, upper_confidence)),
-    ', '.join(map(str, central_value)),
-    ', '.join(map(str, central_confidence)),
-    ', '.join(map(str, lower_value)),
-    ', '.join(map(str, lower_confidence))
-]
 
 
 def save_results_to_excel():
@@ -582,71 +548,70 @@ reset_button.grid(row=3, column=0, columnspan=2, pady=5)
 sliders_frame = tk.Frame(main_center_frame)
 sliders_frame.grid(row=0, column=1, padx=10, pady=1)
 
-# Create global lists to store references to the Comboboxes and Sliders
-all_comboboxes = []  # All Comboboxes
-all_scales = []      # All Sliders
+# Create global lists 
+all_static_texts = []  # Referencias a textos estáticos
+all_radiobuttons = []  # Referencias a radiobuttons
+radiobutton_values = []  # Almacenará los valores seleccionados de los radiobuttons
 
-# Create specific lists for the first column (for validation)
-first_column_comboboxes = []
-first_column_scales = []
-
-# Row names
+# Nombres de filas
 row_names = ["Upper Tooth", "Central Tooth", "Lower Tooth"]
+
 for row_idx, row_name in enumerate(row_names):
-    # Label for each row
+    # Etiqueta para cada fila
     row_label = tk.Label(sliders_frame, text=row_name, font=("Arial", 10, "bold"))
-    row_label.grid(row=row_idx, column=0, padx=10, pady=0) 
+    row_label.grid(row=row_idx, column=0, padx=10, pady=0)
 
-    # Add sliders and comboboxes in corresponding columns
-    for col_idx in range(3):  # Three columns of sliders and comboboxes per row
-        slider_frame = tk.Frame(sliders_frame)
-        slider_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=7)
+    # Agregar texto estático y radiobuttons
+    for col_idx in range(3):  # Tres columnas por fila
+        control_frame = tk.Frame(sliders_frame)
+        control_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=7)
 
-        # Combobox
-        combo = ttk.Combobox(slider_frame, values=color_labels, width=4, state="readonly")
-        combo.set(" ")  # Initial value
-        combo.pack()
-        all_comboboxes.append(combo)  # Save reference globally
+        # Texto estático
+        static_text = tk.Label(control_frame, text="Text", font=("Arial", 10))
+        static_text.pack()
+        all_static_texts.append(static_text)  # Guardar referencia
 
-        if col_idx == 0:  # First column
-            first_column_comboboxes.append(combo)
+        # Radiobuttons
+        radiobutton_frame = tk.Frame(control_frame)
+        radiobutton_frame.pack()
 
-        # Slider
-        scale = tk.Scale(slider_frame, from_=0, to=1, resolution=0.1, orient=tk.HORIZONTAL)
-        scale.pack()
-        all_scales.append(scale)  # Save reference globally
+        rb_value = tk.IntVar(value=3)  # Valor predeterminado de los radiobuttons
+        radiobutton_values.append(rb_value)
 
-        if col_idx == 0:  # First column
-            first_column_scales.append(scale)
+        for rb_idx in range(1, 6):  # Crear 5 radiobuttons (valores 1-5)
+            rb = tk.Radiobutton(
+                radiobutton_frame, 
+                text=str(rb_idx),      # El texto del radiobutton
+                variable=rb_value, 
+                value=rb_idx,
+                indicatoron=False,     # Hace que el botón sea cuadrado con texto alineado
+                width=2                # Ajusta el ancho para mejorar la apariencia
+            )
+            rb.pack(side=tk.LEFT)
+            all_radiobuttons.append(rb)
 
 # Create a new frame for the additional sliders to the right
-additional_sliders_frame = tk.Frame(main_center_frame)
-additional_sliders_frame.grid(row=0, column=2, padx=10, pady=1)
+additional_text_frame = tk.Frame(main_center_frame)
+additional_text_frame.grid(row=0, column=2, padx=10, pady=1)
 
-# Add a header for the new column
-header_label = tk.Label(additional_sliders_frame, text="Validation", font=("Arial", 12, "bold"))
+# Agregar un encabezado para la nueva columna
+header_label = tk.Label(additional_text_frame, text="Comments", font=("Arial", 12, "bold"))
 header_label.grid(row=0, column=0, padx=0, pady=0, columnspan=2)
 
-# Create a new list to store the additional sliders
-additional_sliders = []
+# Crear una lista para almacenar las referencias de las casillas de texto
+additional_text_entries = []
 
-# Add sliders to the right for each row
+# Agregar casillas de texto para cada fila
 for row_idx in range(len(row_names)):
-    # Add the slider for this row
-    additional_slider = tk.Scale(additional_sliders_frame, from_=1, to=5, resolution=1, orient=tk.HORIZONTAL)
-    additional_slider.set(3)
+    # Crear una casilla de texto
+    text_entry = tk.Entry(additional_text_frame, width=15, font=("Arial", 10))
+    text_entry.grid(row=row_idx + 1, column=0, padx=10, pady=7)  # Espaciado para cada fila
 
-    additional_slider.grid(row=row_idx + 1, column=0, padx=10, pady=7)  # Use row_idx + 1 to leave space for header
-
-    # Save a reference to the slider in the list
-    additional_sliders.append(additional_slider)
+    # Guardar la referencia a la casilla de texto
+    additional_text_entries.append(text_entry)
 
 # Disable the "Next" button at the start
 next_button.config(state="disabled")
-
-for scale in additional_sliders:
-    scale.bind("<ButtonRelease-1>", lambda e: validate_first_column())
-    scale.bind("<Motion>", lambda e: validate_first_column())
 
 vita_images = []
 current_index = -1
