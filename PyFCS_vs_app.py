@@ -130,16 +130,17 @@ def load_vita_images():
 
 def show_next_image():
     """Shows the next random image in Image 2 and resets the values."""
-    global current_index
+    global current_index, results_matrix
 
     # Save results of the current case
-    # if current_index >= 0:
-    #     current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
-    #     update_results_matrix(current_tooth)
+    if current_index >= 0:
+        current_tooth = vita_images[current_index][0].split(".")[0]  # Get the tooth name
+        update_results_matrix(current_tooth)
 
     # Move to the next index
     current_index += 1
     next_file()
+    reset_all_inputs()
 
     # If there are still images available
     if current_index < len(vita_images):  
@@ -154,48 +155,50 @@ def show_next_image():
         current_tooth = vita_images[current_index][0].split(".")[0] 
         current_idx_t = color_labels.index(current_tooth)
         current_row = data.iloc[current_idx_t]
+        current_row_results = results_matrix[current_idx_t]
 
         top_values = current_row['top']    
         middle_values = current_row['middle']
         bottom_values = current_row['bottom']
 
         # Para "top"
-        all_static_texts[0].config(text=top_values[0][0])
-        all_static_texts[1].config(text=top_values[1][0])
-        all_static_texts[2].config(text=top_values[2][0])
-        radiobutton_values[0].set(top_values[0][1])
-        radiobutton_values[1].set(top_values[1][1])
-        radiobutton_values[2].set(top_values[2][1])
+        for idx in range(3):  # Índices 0 a 2 para "top"
+            if top_values[idx][1] <= 0.1:  # Verificar si el valor es menor o igual a 0.1
+                all_static_texts[idx].config(text="")
+                all_static_texts[idx].grid_forget()  # Ocultar texto
+                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:  # Ocultar botones (5 por fila)
+                    rb.pack_forget()
+            else:
+                all_static_texts[idx].config(text=f"{top_values[idx][0]} -> {top_values[idx][1]}")
 
         # Para "middle"
-        all_static_texts[3].config(text=middle_values[0][0])
-        all_static_texts[4].config(text=middle_values[1][0])
-        all_static_texts[5].config(text=middle_values[2][0])
-        radiobutton_values[3].set(middle_values[0][1])
-        radiobutton_values[4].set(middle_values[1][1])
-        radiobutton_values[5].set(middle_values[2][1])
+        for idx in range(3, 6):  # Índices 3 a 5 para "middle"
+            if middle_values[idx - 3][1] <= 0.1:
+                all_static_texts[idx].config(text="")
+                all_static_texts[idx].grid_forget()
+                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                    rb.pack_forget()
+            else:
+                all_static_texts[idx].config(text=f"{middle_values[idx - 3][0]} -> {middle_values[idx - 3][1]}")
 
         # Para "bottom"
-        all_static_texts[6].config(text=bottom_values[0][0])
-        all_static_texts[7].config(text=bottom_values[1][0])
-        all_static_texts[8].config(text=bottom_values[2][0])
-        radiobutton_values[6].set(bottom_values[0][1])
-        radiobutton_values[7].set(bottom_values[1][1])
-        radiobutton_values[8].set(bottom_values[2][1])
-
+        for idx in range(6, 9):  # Índices 6 a 8 para "bottom"
+            if bottom_values[idx - 6][1] <= 0.1:
+                all_static_texts[idx].config(text="")
+                all_static_texts[idx].grid_forget()
+                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                    rb.pack_forget()
+            else:
+                all_static_texts[idx].config(text=f"{bottom_values[idx - 6][0]} -> {bottom_values[idx - 6][1]}")
         
-        # CUANDO VAYA GUARDANDO LA DATA AQUI COMPRUEBO SI GUARDADA
-        # if current_row and any(value is not None for value in current_row):
-        #     restore_previous_values(current_tooth)
-        # else:
-        #     reset_all_inputs()
-        reset_all_inputs()
+        if current_row_results and any(value is not None for value in current_row_results):
+            restore_previous_values(current_tooth)
+        
 
         # Update button states
         prev_button.config(state="normal" if current_index > 0 else "disabled")
         next_button.config(state="normal" if current_index < len(vita_images) - 1 else "disabled")
         update_image_from_selection()
-        validate_first_column()  # Automatically validate if the first column is filled
 
     else:
         # All images have been shown, ask user if they want to finalize
@@ -211,7 +214,7 @@ def show_next_image():
 
 def show_previous_image():
     """Shows the previous image and restores its values."""
-    global current_index
+    global current_index, results_matrix
 
     if current_index > 0:  # Prevent going to negative indices
         # Save current results
@@ -220,6 +223,7 @@ def show_previous_image():
 
         # Move to the previous index
         current_index -= 1
+        reset_all_inputs()
 
         # Display the previous image
         _, img_tk = vita_images[current_index]
@@ -237,30 +241,37 @@ def show_previous_image():
         bottom_values = current_row['bottom']
 
         # Para "top"
-        all_static_texts[0].config(text=top_values[0][0])
-        all_static_texts[1].config(text=top_values[1][0])
-        all_static_texts[2].config(text=top_values[2][0])
-        radiobutton_values[0].set(top_values[0][1])
-        radiobutton_values[1].set(top_values[1][1])
-        radiobutton_values[2].set(top_values[2][1])
+        for idx in range(3):  # Índices 0 a 2 para "top"
+            if top_values[idx][1] <= 0.1:  # Verificar si el valor es menor o igual a 0.1
+                all_static_texts[idx].config(text="")
+                all_static_texts[idx].grid_forget()  # Ocultar texto
+                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:  # Ocultar botones (5 por fila)
+                    rb.pack_forget()
+            else:
+                all_static_texts[idx].config(text=f"{top_values[idx][0]} -> {top_values[idx][1]}")
 
         # Para "middle"
-        all_static_texts[3].config(text=middle_values[0][0])
-        all_static_texts[4].config(text=middle_values[1][0])
-        all_static_texts[5].config(text=middle_values[2][0])
-        radiobutton_values[3].set(middle_values[0][1])
-        radiobutton_values[4].set(middle_values[1][1])
-        radiobutton_values[5].set(middle_values[2][1])
+        for idx in range(3, 6):  # Índices 3 a 5 para "middle"
+            if middle_values[idx - 3][1] <= 0.1:
+                all_static_texts[idx].config(text="")
+                all_static_texts[idx].grid_forget()
+                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                    rb.pack_forget()
+            else:
+                all_static_texts[idx].config(text=f"{middle_values[idx - 3][0]} -> {middle_values[idx - 3][1]}")
 
         # Para "bottom"
-        all_static_texts[6].config(text=bottom_values[0][0])
-        all_static_texts[7].config(text=bottom_values[1][0])
-        all_static_texts[8].config(text=bottom_values[2][0])
-        radiobutton_values[6].set(bottom_values[0][1])
-        radiobutton_values[7].set(bottom_values[1][1])
-        radiobutton_values[8].set(bottom_values[2][1])
+        for idx in range(6, 9):  # Índices 6 a 8 para "bottom"
+            if bottom_values[idx - 6][1] <= 0.1:
+                all_static_texts[idx].config(text="")
+                all_static_texts[idx].grid_forget()
+                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                    rb.pack_forget()
+            else:
+                all_static_texts[idx].config(text=f"{bottom_values[idx - 6][0]} -> {bottom_values[idx - 6][1]}")
 
 
+        restore_previous_values(current_tooth)
         update_image_from_selection()
 
     # Update button states
@@ -269,84 +280,98 @@ def show_previous_image():
     previous_file()
 
 
+
 def restore_previous_values(current_tooth):
-    """Restores the dropdown and slider values for the current index or resets inputs if no values exist."""
+    """Restaura los valores de los Radiobuttons y textos para el diente actual o reinicia si no hay valores previos."""
     global results_matrix
 
     try:
-        # Retrieve the index for the given tooth
+        # Recuperar el índice del diente en la lista de etiquetas
         current_index = color_labels.index(current_tooth)
     except ValueError:
         messagebox.showerror("Error", f"Tooth '{current_tooth}' not found in the list.")
         return
 
-    # Retrieve the current row in the results matrix
+
+    current_row = data.iloc[current_index]
+    top_values = current_row['top']    
+    middle_values = current_row['middle']
+    bottom_values = current_row['bottom']
+
+    # Recuperar la fila correspondiente de la matriz de resultados
     current_row = results_matrix[current_index]
 
-    # Check if the current row has any non-None values
+    # Comprobar si la fila tiene valores no nulos
     if current_row and any(value is not None for value in current_row):
-        # Extract saved values from the matrix row
-        upper_value, upper_confidence, central_value, central_confidence, lower_value, lower_confidence = current_row
+        # Iterar por las 9 columnas de la fila (top, middle, bottom)
+        for col_idx in range(9):  # 9 columnas por fila (3 para "top", 3 para "middle", 3 para "bottom")
+            value = current_row[col_idx]
 
-        # Parse the string values back to lists
-        upper_value = upper_value.split(", ")
-        upper_confidence = list(map(float, upper_confidence.split(", ")))
-        central_value = central_value.split(", ")
-        central_confidence = list(map(float, central_confidence.split(", ")))
-        lower_value = lower_value.split(", ")
-        lower_confidence = list(map(float, lower_confidence.split(", ")))
+            # Verificar si hay un valor en la celda actual
+            if value != -1:  # Si hay valor restaurado
+                if col_idx < 3:
+                    all_static_texts[col_idx].config(text=f"{top_values[col_idx][0]} -> {top_values[col_idx][1]}")
+                elif col_idx >= 3 and col_idx < 6:
+                    all_static_texts[col_idx].config(text=f"{middle_values[col_idx - 3][0]} -> {middle_values[col_idx - 3][1]}")
+                else:
+                    all_static_texts[col_idx].config(text=f"{bottom_values[col_idx - 6][0]} -> {bottom_values[col_idx - 6][1]}")
 
-        # Restore the dropdowns and sliders
-        # Para "top"
-        all_static_texts[0].config(text=top_values[0][0])
-        all_static_texts[1].config(text=top_values[1][0])
-        all_static_texts[2].config(text=top_values[2][0])
-        radiobutton_values[0].set(top_values[0][1])
-        radiobutton_values[1].set(top_values[1][1])
-        radiobutton_values[2].set(top_values[2][1])
+                # all_static_texts[col_idx].grid()  # Asegurarse de que el texto sea visible
 
-        # Para "middle"
-        all_static_texts[3].config(text=middle_values[0][0])
-        all_static_texts[4].config(text=middle_values[1][0])
-        all_static_texts[5].config(text=middle_values[2][0])
-        radiobutton_values[3].set(middle_values[0][1])
-        radiobutton_values[4].set(middle_values[1][1])
-        radiobutton_values[5].set(middle_values[2][1])
+                # Restaurar el valor del Radiobutton
+                radiobutton_values[col_idx].set(value)
 
-        # Para "bottom"
-        all_static_texts[6].config(text=bottom_values[0][0])
-        all_static_texts[7].config(text=bottom_values[1][0])
-        all_static_texts[8].config(text=bottom_values[2][0])
-        radiobutton_values[6].set(bottom_values[0][1])
-        radiobutton_values[7].set(bottom_values[1][1])
-        radiobutton_values[8].set(bottom_values[2][1])
+                # Asegurarse de que los Radiobuttons sean visibles
+                for rb in all_radiobuttons[col_idx * 5: (col_idx + 1) * 5]:  # 5 botones por fila
+                    rb.pack(side=tk.LEFT)
 
     else:
-        # If the row is empty or contains only None, reset all inputs
+        # Si la fila está vacía o contiene solo None, restablecer todo
         reset_all_inputs()
 
 
 
-def validate_first_column():
-    """Validates that the Sliders in the first column are filled."""
-    all_valid = True
 
-    # Validate that all Sliders have a value greater than 0
-    # if all_valid:  # Only continue if the Comboboxes are valid
-    #     for scale in additional_sliders:
-    #         if scale.get() == 0.0:  # Slider at its initial position
-    #             all_valid = False
-    #             break
 
-    # Enable or disable the "Next" button based on validation
+def validate_visible():
+    """Validates that at least one Radiobutton in each visible row is selected."""
+    all_valid = True  # Inicialmente asumimos que todos son válidos
+
+    # Iterar por las variables asociadas a los Radiobuttons visibles
+    for idx, rb_value in enumerate(radiobutton_values):
+        # Si el texto relacionado con los Radiobuttons está oculto, ignorar
+        if all_static_texts[idx].cget("text") != "":   # Verificar si la etiqueta es visible
+            if rb_value.get() == -1:  # Ningún botón seleccionado
+                all_valid = False
+                break
+
+    # Habilitar o deshabilitar el botón "Next" en función de la validación
     next_button.config(state="normal" if all_valid else "disabled")
 
 
+
 def reset_all_inputs():
-    """Resets all Comboboxes and Sliders."""
-    # Reset all Sliders
-    # for scale in additional_sliders:
-    #     scale.set(3)  # Initial value
+    """Resets all Radiobuttons to their initial state (value -1) and restores visibility."""
+    # Restablecer todos los valores de los radiobuttons a -1 (deseleccionar)
+    for rb_value in radiobutton_values:
+        rb_value.set(-1)  # Restablecer a su valor inicial
+
+    # Iterar sobre todos los índices de los textos estáticos y radiobuttons
+    for idx in range(len(all_static_texts)):
+        # Verificar si el texto está vacío (indicando que la fila está oculta)
+        if all_static_texts[idx].cget("text") == "":  # Si el texto está vacío, restaurar la visibilidad
+            # Hacer visibles los Radiobuttons si estaban ocultos
+            for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:  # Considerando que hay 5 botones por fila
+                if not rb.winfo_ismapped():  # Si el Radiobutton está oculto
+                    rb.pack(side=tk.LEFT)  # Hacerlo visible de nuevo
+            # También restaurar el texto si es necesario
+            all_static_texts[idx].config(text="")  # Puedes poner el texto que desees aquí
+
+        # Deseleccionar todos los Radiobuttons
+        for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+            rb.deselect()  # Deseleccionar los radiobuttons
+
+
 
 
 def reset_cycle():
@@ -373,20 +398,37 @@ def reset_cycle():
 # Initialize results matrix with empty rows
 def initialize_results_matrix():
     global results_matrix
-    results_matrix = [[None] * 6 for _ in color_labels]  # 6 columns for each tooth
+    results_matrix = [[None] * 9 for _ in color_labels]  # 3 columns for each tooth
 
+def initialize_comments_matrix():
+    global comments_matrix
+    comments_matrix = [[None] * 3 for _ in color_labels]  # 3 columns for each tooth
 
 def update_results_matrix(diente):
     """Updates the results matrix with the values from dropdowns and sliders."""
+    global results_matrix
+
+    try:
+        row_idx = color_labels.index(diente)
+    except ValueError:
+        messagebox.showerror("Error", f"Diente '{diente}' no encontrado en la lista.")
+        return
+
+    for col_idx in range(9):  # 3 columnas: top, middle, bottom
+        # Verificar si el conjunto de radiobuttons es visible
+        if results_matrix[row_idx][col_idx] != -1:  # Si los radiobuttons están visibles
+            # Obtener el valor seleccionado de los radiobuttons
+            selected_value = radiobutton_values[col_idx].get()
+            results_matrix[row_idx][col_idx] = selected_value
 
 
 
 def save_results_to_excel():
     """Saves the results matrix to an Excel file."""
-    global user_name
+    global user_name, comments_matrix, results_matrix
 
     # File and sheet
-    file_name = "Results.xlsx"
+    file_name = "Results\Validation_results.xlsx"
     sheet_name = user_name
 
     # Create file if it doesn't exist
@@ -410,15 +452,31 @@ def save_results_to_excel():
     # Add headers
     headers = [
         "Tooth",
-        "Upper Value", "Upper Confidence",
-        "Central Value", "Central Confidence",
-        "Lower Value", "Lower Confidence"
+        "UP_1", "UP_2", "UP_3", "U_Comment", 
+        "CP_1", "CP_2", "CP_3", "C_Comment", 
+        "LP_1", "LP_2", "LP_3", "L_Comment"
     ]
     ws.append(headers)
 
-    # Write the data from the matrix to Excel
+    # Write the data from the results_matrix to Excel
     for tooth_label, row_data in zip(color_labels, results_matrix):
-        ws.append([tooth_label] + row_data)
+        # For each row of results, extract the values
+        row_to_write = [tooth_label]
+
+        # For each of the 9 columns, if the value is -1, leave it empty
+        for value in row_data:
+            if value == -1:
+                row_to_write.append("")  # Leave it empty if -1
+            else:
+                row_to_write.append(value)
+
+        # Add the corresponding comments for each section (upper, central, lower)
+        comments_row = []  # This row will hold the comments for each value
+        for comment in comments_matrix:
+            comments_row.append(comment)  # Add corresponding comment
+
+        # Combine the results and comments into one row
+        ws.append(row_to_write + comments_row)
 
     # Save the file
     wb.save(file_name)
@@ -462,6 +520,7 @@ frame.pack(pady=10, padx=10)
 # Global variable to store the user's name
 user_name = ""
 results_matrix = [] 
+comments_matrix = []
 original_position_left_image = (150, 200)  # left image original position
 left_image_id = None  # ID left image
 current_file_index = 0
@@ -482,6 +541,7 @@ total_files = len([f for f in os.listdir(vita_dir) if os.path.isfile(os.path.joi
 
 # Create matrix to save results
 initialize_results_matrix()
+initialize_comments_matrix()
 
 # Load images
 images = [tk.PhotoImage(file=os.path.join(image_dir, image)) for image in image_files]
@@ -575,7 +635,7 @@ for row_idx, row_name in enumerate(row_names):
         radiobutton_frame = tk.Frame(control_frame)
         radiobutton_frame.pack()
 
-        rb_value = tk.IntVar(value=3)  # Valor predeterminado de los radiobuttons
+        rb_value = tk.IntVar(value=-1)  # Valor predeterminado de los radiobuttons
         radiobutton_values.append(rb_value)
 
         for rb_idx in range(1, 6):  # Crear 5 radiobuttons (valores 1-5)
@@ -585,7 +645,8 @@ for row_idx, row_name in enumerate(row_names):
                 variable=rb_value, 
                 value=rb_idx,
                 indicatoron=False,     # Hace que el botón sea cuadrado con texto alineado
-                width=2                # Ajusta el ancho para mejorar la apariencia
+                width=2,                # Ajusta el ancho para mejorar la apariencia
+                command=validate_visible
             )
             rb.pack(side=tk.LEFT)
             all_radiobuttons.append(rb)
@@ -609,9 +670,6 @@ for row_idx in range(len(row_names)):
 
     # Guardar la referencia a la casilla de texto
     additional_text_entries.append(text_entry)
-
-# Disable the "Next" button at the start
-next_button.config(state="disabled")
 
 vita_images = []
 current_index = -1
@@ -645,6 +703,8 @@ update_image_from_selection()
 
 # Show the first random image
 show_next_image()
+
+next_button.config(state="disabled")
 prev_button.config(state="disabled")
 
 # Run the interface
