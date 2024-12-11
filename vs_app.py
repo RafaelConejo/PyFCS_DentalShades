@@ -120,8 +120,12 @@ def load_vita_images():
 def next_file_timer():
     global start_time
     if start_time is None:
-        return 0  
-    return time.time() - start_time
+        elapsed_time = 0
+    else: 
+        elapsed_time = time.time() - start_time
+        start_time = time.time()  # Restart
+
+    return elapsed_time
 
 
 def show_next_image():
@@ -299,12 +303,17 @@ def reset_cycle():
     """Resets the image cycle and controls."""
     global current_index
     global user_name
+    global current_file_index
+    global start_time
+
+    current_file_index = 0
 
     # Save results to Excel before resetting
     initialize_results_matrix()
 
     # Ask for the name again
     ask_user_name()
+    start_time = time.time()
 
     # Shuffle images again
     random.shuffle(vita_images)  
@@ -379,7 +388,7 @@ def save_results_to_excel():
     global user_name
 
     # File and sheet
-    file_name = "Results\Results.xlsx"
+    file_name = "Results\Val_Results.xlsx"
     sheet_name = user_name
 
     # Create file if it doesn't exist
@@ -424,7 +433,7 @@ def save_time_to_excel():
     global user_name, time_matrix
 
     # Archivo y hoja
-    file_name = "Results\Time_Data.xlsx"
+    file_name = "Results\Val_Time.xlsx"
     sheet_name = f"{user_name}_Time"
 
     # Crea el archivo si no existe

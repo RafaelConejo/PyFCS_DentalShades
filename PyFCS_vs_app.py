@@ -7,6 +7,7 @@ from tkinter import ttk, simpledialog, messagebox
 from PIL import Image, ImageTk
 import pandas as pd
 import ast
+import time
 
 current_dir = os.path.dirname(__file__)
 sys.path.append(current_dir)
@@ -128,9 +129,20 @@ def load_vita_images():
     random.shuffle(vita_images)        
 
 
+def next_file_timer():
+    global start_time
+    if start_time is None:
+        elapsed_time = 0
+    else: 
+        elapsed_time = time.time() - start_time
+        start_time = time.time()  # Restart
+
+    return elapsed_time
+
+
 def show_next_image():
     """Shows the next random image in Image 2 and resets the values."""
-    global current_index, results_matrix
+    global current_index, results_matrix, time_matrix
 
     # Save results of the current case
     if current_index >= 0:
@@ -138,6 +150,10 @@ def show_next_image():
 
         update_results_matrix(current_tooth)
         update_comments_matrix(current_tooth)
+
+        current_time = next_file_timer()
+        row_index = color_labels.index(current_tooth)
+        time_matrix[row_index] = current_time
 
     reset_all_inputs()
     # Move to the next index
@@ -235,6 +251,8 @@ def show_next_image():
         finalize = messagebox.askyesno("Finalize", "Your selections will be saved. Do you want to finalize?")
         if finalize:
             save_results_to_excel()
+            save_time_to_excel()
+
             prev_button.config(state="disabled")
             next_button.config(state="disabled")  # Disable "Next"
             reset_button.config(state="normal")  # Enable "Reset all"
@@ -284,25 +302,50 @@ def show_previous_image():
             else:
                 all_static_texts[idx].config(text=f"{top_values[idx][0]} -> {top_values[idx][1]}")
 
+        # Ocultar elementos sobrantes si la longitud de top_values es menor que 3
+        for idx in range(len(top_values), 3):
+            all_static_texts[current_idx].config(text="")
+            all_static_texts[idx].grid_forget()
+            for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                rb.pack_forget()
+
         # Para "middle"
         for idx in range(len(middle_values)):  # Índices 3 a 5 para "middle"
+            current_idx = idx + len(top_values)
             if middle_values[idx][1] <= 0.1:
-                all_static_texts[idx].config(text="")
-                all_static_texts[idx].grid_forget()
-                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                all_static_texts[current_idx].config(text="")
+                all_static_texts[current_idx].grid_forget()
+                for rb in all_radiobuttons[current_idx * 5: (current_idx + 1) * 5]:
                     rb.pack_forget()
             else:
-                all_static_texts[idx].config(text=f"{middle_values[idx][0]} -> {middle_values[idx][1]}")
+                all_static_texts[current_idx].config(text=f"{middle_values[idx][0]} -> {middle_values[idx][1]}")
+
+        # Ocultar elementos sobrantes si la longitud de middle_values es menor que 3
+        for idx in range(len(middle_values), 3):
+            current_idx = idx + len(top_values)
+            all_static_texts[current_idx].config(text="")
+            all_static_texts[current_idx].grid_forget()
+            for rb in all_radiobuttons[current_idx * 5: (current_idx + 1) * 5]:
+                rb.pack_forget()
 
         # Para "bottom"
         for idx in range(len(bottom_values)):    # Índices 6 a 8 para "bottom"
+            current_idx = idx + len(middle_values) + len(top_values)
             if bottom_values[idx][1] <= 0.1:
-                all_static_texts[idx].config(text="")
-                all_static_texts[idx].grid_forget()
-                for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
+                all_static_texts[current_idx].config(text="")
+                all_static_texts[current_idx].grid_forget()
+                for rb in all_radiobuttons[current_idx * 5: (current_idx + 1) * 5]:
                     rb.pack_forget()
             else:
-                all_static_texts[idx].config(text=f"{bottom_values[idx][0]} -> {bottom_values[idx][1]}")
+                all_static_texts[current_idx].config(text=f"{bottom_values[idx][0]} -> {bottom_values[idx][1]}")
+
+        # Ocultar elementos sobrantes si la longitud de bottom_values es menor que 3
+        for idx in range(len(bottom_values), 3):
+            current_idx = idx + len(middle_values) + len(top_values)
+            all_static_texts[current_idx].config(text="")
+            all_static_texts[current_idx].grid_forget()
+            for rb in all_radiobuttons[current_idx * 5: (current_idx + 1) * 5]:
+                rb.pack_forget()
 
         restore_previous_values(current_tooth)
         update_image_from_selection()
@@ -433,12 +476,17 @@ def reset_cycle():
     """Resets the image cycle and controls."""
     global current_index
     global user_name
+    global current_file_index
+    global start_time
+
+    current_file_index = 0
 
     # Save results to Excel before resetting
     initialize_results_matrix()
 
     # Ask for the name again
     ask_user_name()
+    start_time = time.time()
 
     # Shuffle images again
     random.shuffle(vita_images)  
@@ -453,11 +501,15 @@ def reset_cycle():
 # Initialize results matrix with empty rows
 def initialize_results_matrix():
     global results_matrix
-    results_matrix = [[None] * 9 for _ in color_labels]  # 3 columns for each tooth
+    results_matrix = [[None] * 9 for _ in color_labels]  # 9 columns for each tooth
 
 def initialize_comments_matrix():
     global comments_matrix
     comments_matrix = [[None] * 3 for _ in color_labels]  # 3 columns for each tooth
+
+def initialize_time_matrix():
+    global time_matrix
+    time_matrix = [None for _ in color_labels]
 
 def update_results_matrix(diente):
     """Updates the results matrix with the values from dropdowns and sliders."""
@@ -502,7 +554,7 @@ def save_results_to_excel():
     global user_name, comments_matrix, results_matrix
 
     # File and sheet
-    file_name = "Results\Validation_results.xlsx"
+    file_name = "Results\PyFCS_Val_Results.xlsx"
     sheet_name = user_name
 
     # Create file if it doesn't exist
@@ -552,6 +604,52 @@ def save_results_to_excel():
 
 
 
+def save_time_to_excel():
+    """Saves the results Time matrix to an Excel file."""
+    global user_name, time_matrix
+
+    # Archivo y hoja
+    file_name = "Results\PyFCS_Val_Time.xlsx"
+    sheet_name = f"{user_name}_Time"
+
+    # Crea el archivo si no existe
+    if not os.path.exists(file_name):
+        wb = Workbook()
+        wb.save(file_name)
+
+    # Carga el archivo existente
+    wb = load_workbook(file_name)
+
+    # Si la hoja ya existe, añade un sufijo incremental
+    original_sheet_name = sheet_name
+    counter = 1
+    while sheet_name in wb.sheetnames:
+        sheet_name = f"{original_sheet_name}_{counter}"
+        counter += 1
+
+    # Crea una nueva hoja
+    ws = wb.create_sheet(title=sheet_name)
+
+    # Añade encabezados
+    ws.append(["Tooth", "Elapsed Time (seconds)", "Elapsed Time (minutes)"])
+
+    # Escribe los tiempos en el Excel
+    total_time = 0
+    for tooth_label, elapsed_time in zip(color_labels, time_matrix):
+        # Reemplazar valores `None` con 0
+        if elapsed_time is None:
+            elapsed_time = 0
+        elapsed_time_minutes = elapsed_time / 60  # Convertir a minutos
+        ws.append([tooth_label, elapsed_time, elapsed_time_minutes])
+        total_time += elapsed_time
+
+    # Añade una fila para el total
+    total_time_minutes = total_time / 60  # Convertir el total a minutos
+    ws.append(["Total", total_time, total_time_minutes])
+
+    # Guarda el archivo
+    wb.save(file_name)
+
 
 
 
@@ -578,6 +676,9 @@ for idx, row in data.iterrows():
     middle_values = row['middle']  
     bottom_values = row['bottom'] 
 
+start_time = None
+time_matrix = []
+
 
 ############################################################ INTERFACE ############################################################
 
@@ -595,6 +696,7 @@ current_file_index = 0
 
 # Ask for the user's ID at the start
 ask_user_name()
+start_time = time.time()
 
 # Variable to store the selected option
 image_source = tk.StringVar(value="tooth")  # By default, use 'Vita Tooth'
@@ -610,6 +712,7 @@ total_files = len([f for f in os.listdir(vita_dir) if os.path.isfile(os.path.joi
 # Create matrix to save results
 initialize_results_matrix()
 initialize_comments_matrix()
+initialize_time_matrix()
 
 # Load images
 images = [tk.PhotoImage(file=os.path.join(image_dir, image)) for image in image_files]
