@@ -140,6 +140,31 @@ def next_file_timer():
     return elapsed_time
 
 
+def load_image_for_tooth(tooth_name, img_frame):
+    """Carga y muestra la imagen correspondiente para un diente dado."""
+    global image_dir
+    image_path = os.path.join(image_dir, f"{tooth_name}.png")
+
+    # Verifica si la imagen existe
+    if os.path.exists(image_path):
+        try:
+            # Carga la imagen y la redimensiona
+            img = Image.open(image_path).convert("RGBA")
+            img = img.resize((20, 20), Image.Resampling.LANCZOS)
+            img_tk = ImageTk.PhotoImage(img)
+
+            # Inserta la imagen en un Label dentro del frame
+            label = tk.Label(image_frames[img_frame], image=img_tk)
+            label.image = img_tk  # Guarda una referencia para evitar que se recolecte por el GC
+            label.pack(expand=True)  # Ajusta la posición en el frame
+        except Exception as e:
+            print(f"Error al cargar la imagen {image_path}: {e}")
+            return None
+    else:
+        print(f"Advertencia: La imagen para {tooth_name} no existe en {image_dir}.")
+        return None
+
+
 def show_next_image():
     """Shows the next random image in Image 2 and resets the values."""
     global current_index, results_matrix, time_matrix
@@ -188,6 +213,7 @@ def show_next_image():
                     rb.pack_forget()
             else:
                 all_static_texts[idx].config(text=f"{top_values[idx][0]} -> {top_values[idx][1]}")
+                load_image_for_tooth(top_values[idx][0], idx)
 
         # Ocultar elementos sobrantes si la longitud de top_values es menor que 3
         for idx in range(len(top_values), 3):
@@ -206,6 +232,7 @@ def show_next_image():
                     rb.pack_forget()
             else:
                 all_static_texts[current_idx].config(text=f"{middle_values[idx][0]} -> {middle_values[idx][1]}")
+                load_image_for_tooth(middle_values[idx][0], current_idx)
 
         # Ocultar elementos sobrantes si la longitud de middle_values es menor que 3
         for idx in range(len(middle_values), 3):
@@ -225,6 +252,7 @@ def show_next_image():
                     rb.pack_forget()
             else:
                 all_static_texts[current_idx].config(text=f"{bottom_values[idx][0]} -> {bottom_values[idx][1]}")
+                load_image_for_tooth(bottom_values[idx][0], current_idx)
 
         # Ocultar elementos sobrantes si la longitud de bottom_values es menor que 3
         for idx in range(len(bottom_values), 3):
@@ -301,6 +329,7 @@ def show_previous_image():
                     rb.pack_forget()
             else:
                 all_static_texts[idx].config(text=f"{top_values[idx][0]} -> {top_values[idx][1]}")
+                load_image_for_tooth(top_values[idx][0], idx)
 
         # Ocultar elementos sobrantes si la longitud de top_values es menor que 3
         for idx in range(len(top_values), 3):
@@ -319,6 +348,7 @@ def show_previous_image():
                     rb.pack_forget()
             else:
                 all_static_texts[current_idx].config(text=f"{middle_values[idx][0]} -> {middle_values[idx][1]}")
+                load_image_for_tooth(middle_values[idx][0], current_idx)
 
         # Ocultar elementos sobrantes si la longitud de middle_values es menor que 3
         for idx in range(len(middle_values), 3):
@@ -338,6 +368,7 @@ def show_previous_image():
                     rb.pack_forget()
             else:
                 all_static_texts[current_idx].config(text=f"{bottom_values[idx][0]} -> {bottom_values[idx][1]}")
+                load_image_for_tooth(bottom_values[idx][0], current_idx)
 
         # Ocultar elementos sobrantes si la longitud de bottom_values es menor que 3
         for idx in range(len(bottom_values), 3):
@@ -393,8 +424,6 @@ def restore_previous_values(current_tooth):
                     all_static_texts[col_idx].config(text=f"{middle_values[col_idx - 3][0]} -> {middle_values[col_idx - 3][1]}")
                 else:
                     all_static_texts[col_idx].config(text=f"{bottom_values[col_idx - 6][0]} -> {bottom_values[col_idx - 6][1]}")
-
-                # all_static_texts[col_idx].grid()  # Asegurarse de que el texto sea visible
 
                 # Restaurar el valor del Radiobutton
                 radiobutton_values[col_idx].set(value)
@@ -468,6 +497,11 @@ def reset_all_inputs():
         # Deseleccionar todos los Radiobuttons
         for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:
             rb.deselect()  # Deseleccionar los radiobuttons
+
+        for frame in image_frames:
+        # Destruir todos los widgets dentro del frame (incluidas las imágenes)
+            for widget in frame.winfo_children():
+                widget.destroy()
 
 
 
@@ -783,6 +817,7 @@ sliders_frame.grid(row=0, column=1, padx=10, pady=1)
 all_static_texts = []  # Referencias a textos estáticos
 all_radiobuttons = []  # Referencias a radiobuttons
 radiobutton_values = []  # Almacenará los valores seleccionados de los radiobuttons
+image_frames = []  # Referencias a los widgets de imagen
 
 # Nombres de filas
 row_names = ["Upper Tooth", "Central Tooth", "Lower Tooth"]
@@ -792,19 +827,25 @@ for row_idx, row_name in enumerate(row_names):
     row_label = tk.Label(sliders_frame, text=row_name, font=("Arial", 10, "bold"))
     row_label.grid(row=row_idx, column=0, padx=10, pady=0)
 
-    # Agregar texto estático y radiobuttons
+    # Agregar texto estático, imágenes y radiobuttons
     for col_idx in range(3):  # Tres columnas por fila
         control_frame = tk.Frame(sliders_frame)
         control_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=7)
 
+        # Frame vacío para imagen (a la izquierda del texto estático)
+        image_frame = tk.Frame(control_frame, width=20, height=20)
+        image_frame.pack(padx=5)
+        image_frame.pack_propagate(False)   # Evita que el frame cambie de tamaño
+        image_frames.append(image_frame)
+
         # Texto estático
         static_text = tk.Label(control_frame, text="Text", font=("Arial", 10))
-        static_text.pack()
+        static_text.pack() 
         all_static_texts.append(static_text)  # Guardar referencia
 
         # Radiobuttons
         radiobutton_frame = tk.Frame(control_frame)
-        radiobutton_frame.pack()
+        radiobutton_frame.pack(side="bottom", pady=5)
 
         rb_value = tk.IntVar(value=-1)  # Valor predeterminado de los radiobuttons
         radiobutton_values.append(rb_value)
@@ -822,6 +863,7 @@ for row_idx, row_name in enumerate(row_names):
             rb.pack(side=tk.LEFT)
             all_radiobuttons.append(rb)
 
+
 # Create a new frame for the additional sliders to the right
 additional_text_frame = tk.Frame(main_center_frame)
 additional_text_frame.grid(row=0, column=2, padx=10, pady=1)
@@ -836,8 +878,8 @@ additional_text_entries = []
 # Agregar casillas de texto para cada fila
 for row_idx in range(len(row_names)):
     # Crear una casilla de texto
-    text_entry = tk.Entry(additional_text_frame, width=15, font=("Arial", 10))
-    text_entry.grid(row=row_idx + 1, column=0, padx=10, pady=7)  # Espaciado para cada fila
+    text_entry = tk.Entry(additional_text_frame, width=25, font=("Arial", 10))
+    text_entry.grid(row=row_idx + 1, column=0, padx=10, pady=20)  # Espaciado para cada fila
 
     # Guardar la referencia a la casilla de texto
     additional_text_entries.append(text_entry)
