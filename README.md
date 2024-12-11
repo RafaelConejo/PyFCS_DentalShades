@@ -2,7 +2,7 @@
 
 ## Description
 
-The **VITA Validation Software** is a Python-based application designed for dentists and dental professionals to validate their accuracy in predicting the color of a tooth sample. Users are shown a random sample from the 16 shapes in the VITA Classical shade guide and must determine the correct matching shade based on the reference chart. After making a decision, users can submit their predicted shade along with their confidence level (0-1).
+The **Tooth Color Validation** is a Python-based application designed for dentists and dental professionals to validate their accuracy in predicting the color of a tooth sample. Users are shown a random sample from the 16 shapes in the VITA Classical shade guide and must determine the correct matching shade based on the reference chart. After making a decision, users can submit their predicted shade along with their confidence level (0-1).
 
 ### Features
 - Randomized selection of tooth samples from the VITA Classical shade guide.
