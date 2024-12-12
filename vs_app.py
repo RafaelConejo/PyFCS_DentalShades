@@ -45,59 +45,75 @@ def ask_user_name():
         ask_user_name()  # Ask for the name again
 
 
-# Function to load the corresponding image from the selected options
 def update_image_from_selection():
-    global image_id1
+    """Function to update and display the image based on the selected options (color and source)"""
+    global image_id1  # Variable to store the ID of the image on the canvas
+    
+    # Get the selected color label from the user input
     selected_label = selected_color.get()
     
+    # If no label is selected, remove the image from the canvas and exit the function
     if not selected_label:
-        shared_canvas.delete("image1")  # Borrar solo la imagen 1
+        shared_canvas.delete("image1")  # Delete only image 1
         return
     
+    # Determine the directory based on the image source (tooth or reference colors)
     directory = "Datasets/vita_tooth_test" if image_source.get() == "tooth" else "Datasets/reference_colors"
-    new_size = (62,90) if directory == "Datasets/vita_tooth_test" else (50,50)
+    
+    # Set the size of the image depending on the directory
+    new_size = (62, 90) if directory == "Datasets/vita_tooth_test" else (50, 50)
+    
+    # Construct the full path of the image to be loaded
     image_path = os.path.join(directory, f"{selected_label}.png")
     
+    # Check if the image exists at the specified path
     if os.path.exists(image_path):
-        img = Image.open(image_path).convert("RGBA").resize((new_size), Image.Resampling.LANCZOS)
+        # Open and resize the image, then convert it to an RGBA format
+        img = Image.open(image_path).convert("RGBA").resize(new_size, Image.Resampling.LANCZOS)
+        
+        # Convert the image to a format that can be used in the tkinter canvas
         img_tk = ImageTk.PhotoImage(img)
-        shared_canvas.delete("image1")  # Borrar cualquier imagen previa
-        shared_canvas.image1 = img_tk  # Guardar referencia
+        
+        # Remove any existing image with the tag "image1"
+        shared_canvas.delete("image1")
+        
+        # Store the image reference to prevent it from being garbage collected
+        shared_canvas.image1 = img_tk
+        
+        # Create the new image on the canvas at the specified coordinates
         image_id1 = shared_canvas.create_image(*coords_img1, image=img_tk, tag="image1")
 
+        # Bind mouse events to the image for dragging and interaction
         shared_canvas.bind("<ButtonPress-1>", on_image_press)
         shared_canvas.bind("<B1-Motion>", on_image_drag)
         shared_canvas.bind("<ButtonRelease-1>", on_image_release)
     else:
+        # If the image is not found, delete any previous image and create a placeholder text
         shared_canvas.delete("image1")
         shared_canvas.create_text(*coords_img1, text=" ", tag="image1")
 
 
 def on_image_press(event):
+    """Saves the initial click coordinates for dragging the image."""
     global offset_x, offset_y
-    # Guardar las coordenadas iniciales del clic dentro del Canvas
-    offset_x = event.x
-    offset_y = event.y
+    offset_x, offset_y = event.x, event.y
 
 def on_image_drag(event):
+    """Moves the image on the canvas while dragging."""
     global offset_x, offset_y
-    # Mover la imagen izquierda dentro del Canvas si el clic fue sobre ella
     canvas_items = shared_canvas.find_closest(event.x, event.y)
     if canvas_items and canvas_items[0] == image_id1:
-        dx = event.x - offset_x
-        dy = event.y - offset_y
+        dx, dy = event.x - offset_x, event.y - offset_y
         shared_canvas.move(image_id1, dx, dy)
-        offset_x = event.x
-        offset_y = event.y
+        offset_x, offset_y = event.x, event.y
 
 def on_image_release(event):
+    """Resets the image to its original position after release."""
     global original_position_left_image, image_id1
-    # Volver a la posición original de la imagen izquierda
-    shared_canvas.coords(image_id1, original_position_left_image[0], original_position_left_image[1])
+    shared_canvas.coords(image_id1, *original_position_left_image)
 
-
-# Function to update images according to the selected Radiobutton
 def update_image_source():
+    """Updates the displayed image when the source changes."""
     update_image_from_selection()
 
 
@@ -118,42 +134,63 @@ def load_vita_images():
     random.shuffle(vita_images)        
 
 def next_file_timer():
+    """
+    Returns the elapsed time since the last call and resets the timer.
+    If it's the first call, it returns 0.
+    """
     global start_time
-    if start_time is None:
+    if start_time is None:  # First call
         elapsed_time = 0
-    else: 
+    else:  # Calculate elapsed time
         elapsed_time = time.time() - start_time
-        start_time = time.time()  # Restart
-
+        start_time = time.time()  # Restart the timer
+    
     return elapsed_time
 
+
 def load_image(image_frame, image_path):
-    """Carga una imagen en un frame."""
+    """Loads and displays an image in the given frame."""
+    
+    # Remove any previous widgets from the frame to make room for the new image
     for widget in image_frame.winfo_children():
-        widget.destroy()  # Elimina cualquier widget previo en el frame
+        widget.destroy()  # Remove all previous widgets from the image frame
+    
     try:
+        # Open the image from the given path and convert it to RGBA format (support transparency)
         img = Image.open(image_path).convert("RGBA")
+        
+        # Resize the image to a fixed size (20x20 in this case) with high-quality resampling
         img = img.resize((20, 20), Image.Resampling.LANCZOS)
         photo = ImageTk.PhotoImage(img)
         label = tk.Label(image_frame, image=photo)
-        label.image = photo  # Mantener una referencia para evitar el garbage collection
+        
+        # Keep a reference to the image to avoid it being garbage collected by Python
+        label.image = photo
+        
+        # Pack the label into the frame, expanding it to fit the available space
         label.pack(expand=True)
+    
     except FileNotFoundError:
-        print(f"Imagen no encontrada: {image_path}")
+        # If the image file is not found at the given path, print an error message
+        print(f"Image not found: {image_path}")
 
 
 def handle_combobox_selected(event):
-    """Maneja el evento de selección en un combobox."""
-    global image_dir
-
+    """Handles the event when a selection is made in a combobox."""
+    
+    # Get the combobox widget that triggered the event
     combobox = event.widget
     value = combobox.get()
-    idx = all_comboboxes.index(combobox)  # Encuentra el índice del combobox
-    image_frame = image_frames[idx]  # Obtén el frame de imagen correspondiente
-
+    
+    # Find the index of the combobox from the list of all comboboxes
+    idx = all_comboboxes.index(combobox)
+    image_frame = image_frames[idx]
     image_path = os.path.join(image_dir, f"{value}.png")
+    
+    # Load and display the image in the appropriate frame
     load_image(image_frame, image_path)
-
+    
+    # If the combobox is in the first column, perform validation
     if combobox in first_column_comboboxes:
         validate_first_column()
 
@@ -476,46 +513,46 @@ def save_time_to_excel():
     """Saves the results Time matrix to an Excel file."""
     global user_name, time_matrix
 
-    # Archivo y hoja
+    # File and sheet setup
     file_name = "Results\Val_Time.xlsx"
     sheet_name = f"{user_name}_Time"
 
-    # Crea el archivo si no existe
+    # Create the file if it doesn't exist
     if not os.path.exists(file_name):
         wb = Workbook()
         wb.save(file_name)
 
-    # Carga el archivo existente
+    # Load the existing file
     wb = load_workbook(file_name)
 
-    # Si la hoja ya existe, añade un sufijo incremental
+    # If the sheet already exists, add an incremental suffix
     original_sheet_name = sheet_name
     counter = 1
     while sheet_name in wb.sheetnames:
         sheet_name = f"{original_sheet_name}_{counter}"
         counter += 1
 
-    # Crea una nueva hoja
+    # Create a new sheet
     ws = wb.create_sheet(title=sheet_name)
 
-    # Añade encabezados
+    # Add headers
     ws.append(["Tooth", "Elapsed Time (seconds)", "Elapsed Time (minutes)"])
 
-    # Escribe los tiempos en el Excel
+    # Write the times to the Excel file
     total_time = 0
     for tooth_label, elapsed_time in zip(color_labels, time_matrix):
-        # Reemplazar valores `None` con 0
+        # Replace None values with 0
         if elapsed_time is None:
             elapsed_time = 0
-        elapsed_time_minutes = elapsed_time / 60  # Convertir a minutos
+        elapsed_time_minutes = elapsed_time / 60  # Convert to minutes
         ws.append([tooth_label, elapsed_time, elapsed_time_minutes])
         total_time += elapsed_time
 
-    # Añade una fila para el total
-    total_time_minutes = total_time / 60  # Convertir el total a minutos
+    # Add a row for the total
+    total_time_minutes = total_time / 60  # Convert total time to minutes
     ws.append(["Total", total_time, total_time_minutes])
 
-    # Guarda el archivo
+    # Save the file
     wb.save(file_name)
 
 
@@ -525,12 +562,20 @@ def save_time_to_excel():
 
 ############################################################ Main Windown ############################################################
 
+# Initialize the main window
 root = tk.Tk()
+
+# Set the window to fullscreen
 # root.geometry("1300x800") 
 root.attributes('-fullscreen', True)
+
+# Bind the Escape key to exit fullscreen mode
 root.bind('<Escape>', exit_fullscreen)
+
+# Set the window title
 root.title("Color Selector")
 
+# Initialize the timer and time matrix for tracking elapsed times
 start_time = None
 time_matrix = []
 
@@ -653,10 +698,10 @@ for row_idx, row_name in enumerate(row_names):
         slider_frame = tk.Frame(sliders_frame)
         slider_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=7)
 
-        # Frame vacío para imagen (a la izquierda del texto estático)
+        # Empty frame for the image
         image_frame = tk.Frame(slider_frame, width=20, height=20)
         image_frame.pack(padx=5, pady=10)
-        image_frame.pack_propagate(False)   # Evita que el frame cambie de tamaño
+        image_frame.pack_propagate(False)   # Prevent the frame from resizing automatically
         image_frames.append(image_frame)
 
         # Combobox
