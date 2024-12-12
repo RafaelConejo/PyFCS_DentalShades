@@ -821,7 +821,6 @@ image_frames = []  # Referencias a los widgets de imagen
 
 # Nombres de filas
 row_names = ["Upper Tooth", "Central Tooth", "Lower Tooth"]
-
 for row_idx, row_name in enumerate(row_names):
     # Etiqueta para cada fila
     row_label = tk.Label(sliders_frame, text=row_name, font=("Arial", 10, "bold"))

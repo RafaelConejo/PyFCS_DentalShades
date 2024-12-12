@@ -127,6 +127,36 @@ def next_file_timer():
 
     return elapsed_time
 
+def load_image(image_frame, image_path):
+    """Carga una imagen en un frame."""
+    for widget in image_frame.winfo_children():
+        widget.destroy()  # Elimina cualquier widget previo en el frame
+    try:
+        img = Image.open(image_path).convert("RGBA")
+        img = img.resize((20, 20), Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(img)
+        label = tk.Label(image_frame, image=photo)
+        label.image = photo  # Mantener una referencia para evitar el garbage collection
+        label.pack(expand=True)
+    except FileNotFoundError:
+        print(f"Imagen no encontrada: {image_path}")
+
+
+def handle_combobox_selected(event):
+    """Maneja el evento de selección en un combobox."""
+    global image_dir
+
+    combobox = event.widget
+    value = combobox.get()
+    idx = all_comboboxes.index(combobox)  # Encuentra el índice del combobox
+    image_frame = image_frames[idx]  # Obtén el frame de imagen correspondiente
+
+    image_path = os.path.join(image_dir, f"{value}.png")
+    load_image(image_frame, image_path)
+
+    if combobox in first_column_comboboxes:
+        validate_first_column()
+
 
 def show_next_image():
     """Shows the next random image in Image 2 and resets the values."""
@@ -158,11 +188,11 @@ def show_next_image():
         current_tooth = vita_images[current_index][0].split(".")[0] 
         current_idx_t = color_labels.index(current_tooth)
         current_row = results_matrix[current_idx_t]
+
+        reset_all_inputs()
         if current_row and any(value is not None for value in current_row):
             restore_previous_values(current_tooth)
             
-        else:
-            reset_all_inputs()
 
         # Update button states
         prev_button.config(state="normal" if current_index > 0 else "disabled")
@@ -215,7 +245,15 @@ def show_previous_image():
 
 def restore_previous_values(current_tooth):
     """Restores the dropdown and slider values for the current index or resets inputs if no values exist."""
-    global results_matrix
+    global results_matrix, image_dir
+
+    # Restore the dropdowns, sliders, and images
+    def restore_combobox_and_image(combo_idx, value):
+        all_comboboxes[combo_idx].set(value)
+
+        if value in color_labels:
+            image_path = os.path.join(image_dir, f"{value}.png")
+            load_image(image_frames[combo_idx], image_path)
 
     try:
         # Retrieve the index for the given tooth
@@ -241,26 +279,27 @@ def restore_previous_values(current_tooth):
         lower_confidence = list(map(float, lower_confidence.split(", ")))
 
         # Restore the dropdowns and sliders
-        all_comboboxes[0].set(upper_value[0])
-        all_comboboxes[1].set(upper_value[1])
-        all_comboboxes[2].set(upper_value[2])
+        restore_combobox_and_image(0, upper_value[0])
+        restore_combobox_and_image(1, upper_value[1])
+        restore_combobox_and_image(2, upper_value[2])
         all_scales[0].set(upper_confidence[0])
         all_scales[1].set(upper_confidence[1])
         all_scales[2].set(upper_confidence[2])
 
-        all_comboboxes[3].set(central_value[0])
-        all_comboboxes[4].set(central_value[1])
-        all_comboboxes[5].set(central_value[2])
+        restore_combobox_and_image(3, central_value[0])
+        restore_combobox_and_image(4, central_value[1])
+        restore_combobox_and_image(5, central_value[2])
         all_scales[3].set(central_confidence[0])
         all_scales[4].set(central_confidence[1])
         all_scales[5].set(central_confidence[2])
 
-        all_comboboxes[6].set(lower_value[0])
-        all_comboboxes[7].set(lower_value[1])
-        all_comboboxes[8].set(lower_value[2])
+        restore_combobox_and_image(6, lower_value[0])
+        restore_combobox_and_image(7, lower_value[1])
+        restore_combobox_and_image(8, lower_value[2])
         all_scales[6].set(lower_confidence[0])
         all_scales[7].set(lower_confidence[1])
         all_scales[8].set(lower_confidence[2])
+
     else:
         # If the row is empty or contains only None, reset all inputs
         reset_all_inputs()
@@ -297,6 +336,11 @@ def reset_all_inputs():
     # Reset all Sliders
     for scale in all_scales:
         scale.set(0)  # Initial value
+
+    # Clear all Image Frames
+    for image_frame in image_frames:
+        for widget in image_frame.winfo_children():
+            widget.destroy()  # Remove any image or widget inside the frame
 
 
 def reset_cycle():
@@ -595,6 +639,7 @@ all_scales = []      # All Sliders
 # Create specific lists for the first column (for validation)
 first_column_comboboxes = []
 first_column_scales = []
+image_frames = []  # Referencias a los widgets de imagen
 
 # Row names
 row_names = ["Upper Tooth", "Central Tooth", "Lower Tooth"]
@@ -607,6 +652,12 @@ for row_idx, row_name in enumerate(row_names):
     for col_idx in range(3):  # Three columns of sliders and comboboxes per row
         slider_frame = tk.Frame(sliders_frame)
         slider_frame.grid(row=row_idx, column=col_idx + 1, padx=10, pady=7)
+
+        # Frame vacío para imagen (a la izquierda del texto estático)
+        image_frame = tk.Frame(slider_frame, width=20, height=20)
+        image_frame.pack(padx=5, pady=10)
+        image_frame.pack_propagate(False)   # Evita que el frame cambie de tamaño
+        image_frames.append(image_frame)
 
         # Combobox
         combo = ttk.Combobox(slider_frame, values=color_labels, width=4, state="readonly")
@@ -629,8 +680,8 @@ for row_idx, row_name in enumerate(row_names):
 next_button.config(state="disabled")
 
 # Bind validation to events
-for combo in first_column_comboboxes:
-    combo.bind("<<ComboboxSelected>>", lambda e: validate_first_column())
+for combo in all_comboboxes:
+    combo.bind("<<ComboboxSelected>>", handle_combobox_selected)
 
 for scale in first_column_scales:
     scale.bind("<ButtonRelease-1>", lambda e: validate_first_column())
