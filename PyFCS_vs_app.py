@@ -215,7 +215,7 @@ def show_next_image():
         ]:
             for idx, (label, value) in enumerate(section_values):
                 idx_in_matrix = start_idx + idx
-                if value <= 0.1:
+                if value <= MIN:
                     all_static_texts[idx_in_matrix].config(text="")
                     all_static_texts[idx_in_matrix].grid_forget()
                     for rb in all_radiobuttons[idx_in_matrix * 5:(idx_in_matrix + 1) * 5]:
@@ -296,7 +296,7 @@ def show_previous_image():
         ]:
             for idx, (label, value) in enumerate(section_values):
                 idx_in_matrix = start_idx + idx
-                if value <= 0.1:
+                if value <= MIN:
                     all_static_texts[idx_in_matrix].config(text="")
                     all_static_texts[idx_in_matrix].grid_forget()
                     for rb in all_radiobuttons[idx_in_matrix * 5:(idx_in_matrix + 1) * 5]:
@@ -373,8 +373,8 @@ def restore_previous_values(current_tooth):
         # Restore the comments for the current row in the text entries
         for col_comment in range(3):
             comment = current_comment_row[col_comment]
-            additional_text_entries[col_comment].delete(0, tk.END)  # Clear previous text
-            additional_text_entries[col_comment].insert(0, comment if comment else "")
+            additional_text_entries[col_comment].delete("1.0", tk.END)  # Clear previous text
+            additional_text_entries[col_comment].insert("1.0", comment if comment else "")
 
     else:
         # If the row is empty or contains only None, reset all inputs
@@ -386,8 +386,8 @@ def clear_comments():
     global comments_matrix
 
     for entry in additional_text_entries:
-        if isinstance(entry, tk.Entry):  # Ensure the entry is an instance of tk.Entry
-            entry.delete(0, tk.END)  # Clear the content of the entry
+        if isinstance(entry, tk.Text):  # Ensure the entry is an instance of tk.Entry
+            entry.delete("1.0", tk.END)  # Clear the content of the entry
         else:
             print(f"Warning: {entry} is not a tk.Entry") 
 
@@ -509,7 +509,7 @@ def update_comments_matrix(diente):
     # Loop through the text entries for the current tooth
     for col_idx, entry in enumerate(additional_text_entries):
         # Get and clean the text from the entry
-        comment = entry.get().strip()
+        comment = entry.get("1.0", tk.END).strip()
         # Save the comment in the matrix, or `None` if empty
         comments_matrix[row_idx][col_idx] = comment if comment else None
 
@@ -626,7 +626,7 @@ root.bind('<Escape>', exit_fullscreen)
 root.title("Color Selector")
 
 # File path to the Excel file containing PyFCS data
-file_path = os.path.join(os.getcwd(), "Datasets", "results_opt_1.xlsx")
+file_path = os.path.join(os.getcwd(), "Datasets", "results_opt_2.xlsx")
 
 # Read the data from the Excel file
 data = pd.read_excel(file_path)
@@ -647,6 +647,8 @@ for idx, row in data.iterrows():
 # Initialize the timer and time matrix for tracking elapsed times
 start_time = None
 time_matrix = []
+
+MIN = 0.20
 
 
 ############################################################ INTERFACE ############################################################
@@ -806,20 +808,24 @@ additional_text_frame = tk.Frame(main_center_frame)
 additional_text_frame.grid(row=0, column=2, padx=10, pady=1)
 
 # Add new column 
-header_label = tk.Label(additional_text_frame, text="Comments", font=("Arial", 12, "bold"))
+header_label = tk.Label(additional_text_frame, text="Observations", font=("Arial", 12, "bold"))
 header_label.grid(row=0, column=0, padx=0, pady=0, columnspan=2)
 
 # List to add text
 additional_text_entries = []
 for row_idx in range(len(row_names)):
-    text_entry = tk.Entry(additional_text_frame, width=25, font=("Arial", 10))
+    text_entry = tk.Text(additional_text_frame, width=25, height=5, font=("Arial", 10))
     text_entry.grid(row=row_idx + 1, column=0, padx=10, pady=20)  
 
     additional_text_entries.append(text_entry)
 
+    # Scrollbar 
+    scrollbar = tk.Scrollbar(additional_text_frame, command=text_entry.yview)
+    scrollbar.grid(row=row_idx + 1, column=1, sticky="ns", padx=5)
+    text_entry.config(yscrollcommand=scrollbar.set)
+
 vita_images = []
 current_index = -1
-
 
 # Create Radiobuttons to select the reference type
 reference_options_frame = tk.Frame(buttons_frame)
