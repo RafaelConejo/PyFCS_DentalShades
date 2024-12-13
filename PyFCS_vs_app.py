@@ -254,6 +254,9 @@ def show_next_image():
             reset_button.config(state="normal")  # Enable "Reset all"
         else:
             current_index -= 1  # Return to the last image index
+            reset_all_inputs()  # Reset input fields
+            clear_radioButtons()
+            restore_previous_values(current_tooth)
 
 
 def show_previous_image():
@@ -390,6 +393,18 @@ def clear_comments():
             entry.delete("1.0", tk.END)  # Clear the content of the entry
         else:
             print(f"Warning: {entry} is not a tk.Entry") 
+
+
+def clear_radioButtons():
+    # Iterate over all static text labels and radiobuttons
+    for idx in range(len(all_static_texts)):
+        # Check if the text is empty (indicating that the row is hidden)
+        if all_static_texts[idx].cget("text") == "":  # If the text is empty, restore visibility
+            # Make radiobuttons visible if they were hidden
+            for rb in all_radiobuttons[idx * 5: (idx + 1) * 5]:  # Considering there are 5 buttons per row
+                rb.pack_forget()
+            # Restore text if needed
+            all_static_texts[idx].config(text="")  # You can set the text you want here
 
 
 def validate_visible():
