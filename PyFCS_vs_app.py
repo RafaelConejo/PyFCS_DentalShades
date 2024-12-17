@@ -224,6 +224,9 @@ def show_next_image():
                     all_static_texts[idx_in_matrix].config(text=f"{label} -> {value}")
                     load_image_for_tooth(label, idx_in_matrix)
 
+                    if section == "middle" and idx == 0:
+                        selected_color.set(label)
+
             # Hide remaining elements if the list is shorter than 3
             for idx in range(len(section_values), 3):
                 idx_in_matrix = start_idx + idx
@@ -307,6 +310,9 @@ def show_previous_image():
                 else:
                     all_static_texts[idx_in_matrix].config(text=f"{label} -> {value}")
                     load_image_for_tooth(label, idx_in_matrix)
+
+                    if section == "middle" and idx == 0:
+                        selected_color.set(label)
 
             # Hide extra items if there are fewer than 3 values
             for idx in range(len(section_values), 3):
