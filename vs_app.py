@@ -76,12 +76,17 @@ def update_image_from_selection():
         
         # Remove any existing image with the tag "image1"
         shared_canvas.delete("image1")
+        shared_canvas.delete("label1")
         
         # Store the image reference to prevent it from being garbage collected
         shared_canvas.image1 = img_tk
         
         # Create the new image on the canvas at the specified coordinates
         image_id1 = shared_canvas.create_image(*coords_img1, image=img_tk, tag="image1")
+
+        # Create a label above the image with the selected label
+        label_y_offset = 60
+        shared_canvas.create_text(coords_img1[0], coords_img1[1] - label_y_offset, text=selected_label, tag="label1", font=('Helvetica', 10, 'bold'), fill="black", anchor='s')
 
         # Bind mouse events to the image for dragging and interaction
         shared_canvas.bind("<ButtonPress-1>", on_image_press)
@@ -206,7 +211,14 @@ def show_next_image():
 
         current_time = next_file_timer()
         row_index = color_labels.index(current_tooth)
-        time_matrix[row_index] = current_time
+        
+        # Check if time_matrix[row_index] already has a value
+        if time_matrix[row_index] is not None:
+            # Sum the current_time to the existing value
+            time_matrix[row_index] += current_time
+        else:
+            # Assign current_time if the existing value is 0
+            time_matrix[row_index] = current_time
 
     # Move to the next index
     current_index += 1
