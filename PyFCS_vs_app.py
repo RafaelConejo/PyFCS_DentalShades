@@ -647,7 +647,7 @@ root.bind('<Escape>', exit_fullscreen)
 root.title("Color Selector")
 
 # File path to the Excel file containing PyFCS data
-file_path = os.path.join(os.getcwd(), "Datasets", "results_opt_2.xlsx")
+file_path = os.path.join(os.getcwd(), "Datasets", "results_opt_1.xlsx")
 
 # Read the data from the Excel file
 data = pd.read_excel(file_path)
