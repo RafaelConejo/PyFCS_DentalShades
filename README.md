@@ -3,7 +3,7 @@
 ## Description
 This repository contains the execution framework for the Tooth Color Validation software, including everything needed to install and use it.
 
-All the code in this project is based on the core of PyFCS, developed by the same author and available at: [PyFCS]([PyFCS](https://github.com/RafaelConejo/PyFCS)), where the use of the graphical interface is also documented.
+All the code in this project is based on the core of PyFCS, developed by the same author and available at: [PyFCS](https://github.com/RafaelConejo/PyFCS), where the use of the graphical interface is also documented.
 
 The Tooth Color Validation is a Python-based application designed for dentists and dental professionals to validate their accuracy in predicting the color of a tooth sample. Users are shown a random sample from the 16 shades in the VITA Classical shade guide and must determine the correct matching shade based on the reference chart. After making a decision, users can submit their predicted shade along with their confidence level (0-1).
 
