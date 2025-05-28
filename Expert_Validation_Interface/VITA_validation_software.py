@@ -58,10 +58,10 @@ def update_image_from_selection():
         return
     
     # Determine the directory based on the image source (tooth or reference colors)
-    directory = "Datasets/vita_tooth_test" if image_source.get() == "tooth" else "Datasets/reference_colors"
+    directory = "Expert_Validation_Interface/Datasets/vita_tooth_test" if image_source.get() == "tooth" else "Expert_Validation_Interface/Datasets/reference_colors"
     
     # Set the size of the image depending on the directory
-    new_size = (62, 90) if directory == "Datasets/vita_tooth_test" else (50, 50)
+    new_size = (62, 90) if directory == "Expert_Validation_Interface/Datasets/vita_tooth_test" else (50, 50)
     
     # Construct the full path of the image to be loaded
     image_path = os.path.join(directory, f"{selected_label}.png")
@@ -481,7 +481,7 @@ def save_results_to_excel():
     global user_name
 
     # File and sheet
-    file_name = "Results\Val_Results.xlsx"
+    file_name = "Expert_Validation_Interface\Results\Val_Results.xlsx"
     sheet_name = user_name
 
     # Create file if it doesn't exist
@@ -526,7 +526,7 @@ def save_time_to_excel():
     global user_name, time_matrix
 
     # File and sheet setup
-    file_name = "Results\Val_Time.xlsx"
+    file_name = "Expert_Validation_Interface\Results\Val_Time.xlsx"
     sheet_name = f"{user_name}_Time"
 
     # Create the file if it doesn't exist
@@ -614,8 +614,8 @@ image_source = tk.StringVar(value="tooth")  # By default, use 'Vita Tooth'
 
 # Create the images and assign checkboxes
 color_labels = ["A1", "A2", "A3", "A3_5", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4", "D2", "D3", "D4"]
-image_dir = os.path.join(os.getcwd(), "Datasets", "reference_colors")  # Initial image directory
-vita_dir = os.path.join(os.getcwd(), "Datasets", "vita_tooth")  # Image directory for 'Image 2'
+image_dir = os.path.join(os.getcwd(), "Expert_Validation_Interface/Datasets", "reference_colors")  # Initial image directory
+vita_dir = os.path.join(os.getcwd(), "Expert_Validation_Interface/Datasets", "vita_tooth")  # Image directory for 'Image 2'
 image_files = [f"{label}.png" for label in color_labels]
 
 total_files = len([f for f in os.listdir(vita_dir) if os.path.isfile(os.path.join(vita_dir, f))])

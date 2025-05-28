@@ -1,4 +1,4 @@
-# PyFCS-VITA
+# PyFCS Dental Shades
 
 ## Description
 This repository contains the execution framework for the Tooth Color Validation software, including everything needed to install and use it.
@@ -20,11 +20,11 @@ To validate the chromatic accuracy of the proposed approach, a controlled visual
 3. In the main directory, install the external libraries using the following command:
 
 ```
-pip install -r Datasets\requirements.txt
+pip install -r Expert_Validation_Interface\Datasets\requirements.txt
 ```
 4. Now to run **Tooth Color Validation**:
 ```
-python VITA_validation_software.py
+python Expert_Validation_Interface\VITA_validation_software.py
 ```
 
 
