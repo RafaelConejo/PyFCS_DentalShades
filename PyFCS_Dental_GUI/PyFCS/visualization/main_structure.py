@@ -6,7 +6,7 @@ import os
 from skimage import color
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 import threading
 import colorsys
 import math
@@ -161,7 +161,7 @@ class PyFCSApp:
         tk.Button(color_evaluation_frame,
             text="Region Segmentation", 
             image=at_image,
-            command=self.deploy_at,
+            command=self.region_segmentation,
             compound="left" 
         ).pack(side="left", padx=5)
         color_evaluation_frame.at_image = at_image
@@ -2839,54 +2839,382 @@ class PyFCSApp:
 
 
 
-    ########################################################################################### Color Evaluation Functions ###########################################################################################
-    def get_umbral_points(self, threshold):
+    ########################################################################################### Clinical Protocol Functions ###########################################################################################
+    def region_segmentation(self):
         """
-        Filters points within the fuzzy color space volumes based on the given threshold.
-        Displays the filtered points in a 3D model.
+        Displays a popup window to select an image by filename and creates a floating window for the selected image.
+        If no images are available, it shows an informational message.
         """
-        # Check if the fuzzy color space is loaded
-        if not hasattr(self, 'COLOR_SPACE') or not self.COLOR_SPACE:
-            self.custom_warning("No Color Space", "Please load a fuzzy color space before deploying AT or PT.")
-            return
-
-        selected_options = [key for key, var in self.model_3d_options.items() if var.get()]  # Get all selected options
-        if selected_options == ["Representative"]:
-            return
+        if self.COLOR_SPACE == False:
+            self.custom_warning(message="Must Load a Color Space.")
+            return  # Early return 
         
-        priority_map = {
-            "Support": self.selected_core,
-            "0.5-cut": self.selected_alpha,
-            "Core": self.selected_support
-        } 
-        selected_option = next((opt for opt in ["Support", "0.5-cut", "Core"] if opt in selected_options), None)
-        selected_volume = priority_map[selected_option]
-        
+        # Verify if there are available images to display
+        if not hasattr(self, "load_images_names") or not self.load_images_names:
+            self.custom_warning(message="No images are currently available to display.")
+            return  # Early return if no images are available
 
-        # Find PT or AT points
-        self.filtered_points = utils_structure.filter_points_with_threshold(selected_volume, threshold, step=0.5)
-
-        # Plot the filtered points and display the 3D model
-        fig = Visual_tools.plot_combined_3D(
-            self.file_base_name,
-            self.selected_centroids,
-            self.selected_core,
-            self.selected_alpha,
-            self.selected_support,
-            self.volume_limits,
-            self.hex_color,
-            selected_options,
-            self.filtered_points
+        # Create a popup window for image selection
+        popup, listbox = utils_structure.create_selection_popup(
+            parent=self.image_canvas,
+            title="Select an Image",
+            width=200,
+            height=200,
+            items=[os.path.basename(filename) for filename in self.load_images_names.values()]
         )
-        self.draw_model_3D(fig, selected_options)  # Pass each figure to be drawn on the Tkinter Canvas
+
+        # Center the popup window
+        self.center_popup(popup, 200, 200)
+
+        # Bind the listbox selection event to handle image selection
+        listbox.bind(
+            "<<ListboxSelect>>",
+            lambda event: utils_structure.handle_image_selection(
+                event=event,
+                listbox=listbox,
+                popup=popup,
+                images_names=self.load_images_names,
+                callback=lambda window_id: self.get_3x3_image(window_id)
+            )
+        )
+
+
+    def get_3x3_image(self, window_id):
+        """Dibuja líneas divisorias 3x3 sobre la imagen original sin cambiar su tamaño."""
+        try:
+            # Obtener imagen original almacenada
+            self.show_original_image(window_id)
+            original_img_tk = self.original_images.get(window_id)
+            if original_img_tk is None:
+                self.custom_warning("No Image", f"No original image found for window ID {window_id}")
+                return
+
+            # Convertir a PIL.Image
+            pil_image = ImageTk.getimage(original_img_tk).copy()
+            draw = ImageDraw.Draw(pil_image)
+            width, height = pil_image.size
+
+            # Dibujar rejilla 3x3 (2 líneas verticales y 2 horizontales)
+            third_w = width // 3
+            third_h = height // 3
+            draw.line([(third_w, 0), (third_w, height)], fill="red", width=2)
+            draw.line([(2 * third_w, 0), (2 * third_w, height)], fill="red", width=2)
+            draw.line([(0, third_h), (width, third_h)], fill="red", width=2)
+            draw.line([(0, 2 * third_h), (width, 2 * third_h)], fill="red", width=2)
+
+            # Redimensionar a dimensiones originales si es necesario
+            new_width, new_height = self.image_dimensions[window_id]
+            pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+            # Convertir a PhotoImage para tkinter
+            img_tk = ImageTk.PhotoImage(pil_image)
+
+            # Guardar imagen modificada para referencia futura
+            self.modified_image[window_id] = pil_image
+            self.floating_images[window_id] = img_tk
+
+            # Reemplazar imagen en el canvas
+            image_items = self.image_canvas.find_withtag(f"{window_id}_click_image")
+            if image_items:
+                image_id = image_items[0]
+                self.image_canvas.itemconfig(image_id, image=img_tk)
+
+                self.show_membership_results(window_id, self.images[window_id])
+
+            else:
+                self.custom_warning("Image Error", f"No image found for window_id: {window_id}")
+
+        except Exception as e:
+            self.custom_warning("Display Error", f"Error drawing 3x3 grid: {e}")
 
 
 
-    def deploy_at(self):
-        self.get_umbral_points(1.8)
 
-    def deploy_pt(self):
-        self.get_umbral_points(0.8)
+    def show_membership_results(self, window_id, img):
+        """
+        Calculates and displays the membership degrees by 3x3 region of the image in a centered popup window.
+        """
+        try:
+            # Process the image to get membership degrees by region
+            results = self.normalized_average_aggregation(img, self.fuzzy_color_space)
+            if results is None:
+                self.custom_warning("Processing Error", "Could not calculate results for the image.")
+                return
+
+            # Create popup window
+            popup_width, popup_height = 500, 500
+            result_window = tk.Toplevel(self.root)
+            result_window.title("Membership Degrees by 3x3 Regions")
+            result_window.configure(bg="white")
+            self.center_popup(result_window, popup_width, popup_height)
+
+            # Handle window close
+            def on_close():
+                self.show_original_image(window_id)
+                original_img_tk = self.original_images.get(window_id)
+                if original_img_tk is None:
+                    self.custom_warning("No Image", f"No original image found for window ID {window_id}")
+                    return
+                result_window.destroy()
+
+            result_window.protocol("WM_DELETE_WINDOW", on_close)
+
+            # Title label
+            filename = os.path.basename(self.load_images_names[window_id])
+            tk.Label(result_window, text=f"Results for: {filename}", bg="white",
+                    font=("Arial", 12, "bold")).pack(pady=(10, 10))
+
+            # Radio button options (Normal / Max)
+            mode_frame = tk.Frame(result_window, bg="white")
+            mode_frame.pack(pady=(20, 10))
+
+            # Variable para seleccionar el modo
+            selected_mode = tk.StringVar(value="Normalized Average Aggregation")
+
+            # Contenedor del grid dinámico
+            grid_frame = tk.Frame(result_window, bg="white")
+            grid_frame.pack(padx=10, pady=10)
+
+            def update_results_display():
+                # Limpia el contenido del grid anterior
+                for widget in grid_frame.winfo_children():
+                    widget.destroy()
+
+                # Ejecuta el método correspondiente según el modo
+                if selected_mode.get() == "Normalized Average Aggregation":
+                    results = self.normalized_average_aggregation(img, self.fuzzy_color_space)
+                else:
+                    results = self.max_possibility_aggregation(img, self.fuzzy_color_space)
+
+                if results is None:
+                    self.custom_warning("Processing Error", "Could not calculate results for the image.")
+                    return
+
+                coords = []
+                for region_name in results.keys():
+                    parts = region_name.split('_')
+                    row = int(parts[0][3:])
+                    col = int(parts[1][3:])
+                    coords.append((row, col))
+
+                unique_rows = sorted(set(r for r, _ in coords))
+                unique_cols = sorted(set(c for _, c in coords))
+
+                region_grid = {(r, c): results.get(f"row{r}_col{c}", []) for r, c in coords}
+
+                for r_idx, row in enumerate(unique_rows):
+                    for c_idx, col in enumerate(unique_cols):
+                        frame = tk.Frame(grid_frame, bg="#f2f2f2", bd=1, relief="solid", padx=5, pady=5)
+                        frame.grid(row=r_idx, column=c_idx, padx=5, pady=5, sticky="nsew")
+
+                        tk.Label(frame, text=f"Row {row}, Col {col}", bg="#f2f2f2",
+                                font=("Arial", 10, "bold")).pack()
+
+                        region_data = region_grid.get((row, col), [])
+                        if region_data:
+                            for proto, degree in region_data:
+                                tk.Label(frame, text=f"{proto}: {degree:.3f}", bg="#f2f2f2",
+                                        font=("Arial", 9)).pack(anchor="w")
+                        else:
+                            tk.Label(frame, text="(No valid data)", bg="#f2f2f2",
+                                    font=("Arial", 9, "italic")).pack()
+
+            # Frame para los radio buttons
+            mode_frame = tk.Frame(result_window, bg="white")
+            mode_frame.pack(pady=(10, 5))
+
+            # Botones que cambian el modo y actualizan resultados al pulsarse
+            normal_radio = tk.Radiobutton(mode_frame,
+                                        text="Normalized Average Aggregation",
+                                        variable=selected_mode,
+                                        value="Normalized Average Aggregation",
+                                        command=update_results_display,
+                                        bg="white", font=("Arial", 10))
+            normal_radio.pack(anchor="w", padx=10)
+
+            max_radio = tk.Radiobutton(mode_frame,
+                                    text="Max-Possibility Aggregation",
+                                    variable=selected_mode,
+                                    value="Max-Possibility Aggregation",
+                                    command=update_results_display,
+                                    bg="white", font=("Arial", 10))
+            max_radio.pack(anchor="w", padx=10)
+
+            # Mostrar resultados iniciales (modo normalizado)
+            update_results_display()
+
+
+        except Exception as e:
+            self.custom_warning("Error", f"An error occurred while displaying results: {e}")
+
+
+
+
+
+    def normalized_average_aggregation(self, image, fuzzy_color_space):
+        # Convert image to numpy array
+        img_np = np.array(image)
+
+        # Handle alpha channel if present
+        if img_np.shape[-1] == 4:  # RGBA
+            img_np = img_np[..., :3]
+
+        # Normalize pixel values
+        img_np = img_np / 255.0
+        lab_image = color.rgb2lab(img_np)
+
+        membership_cache = {}
+        # 9 regions: 3 rows × 3 cols
+        region_counts = [{} for _ in range(9)]
+
+        height, width = img_np.shape[:2]
+        height_third = height // 3
+        width_third = width // 3
+
+        L_THRESHOLD = 20
+        AB_THRESHOLD = 10
+
+        for y in range(height):
+            row = y // height_third
+            if row > 2:
+                row = 2  # Last row fix
+
+            for x in range(width):
+                col = x // width_third
+                if col > 2:
+                    col = 2  # Last col fix
+
+                region_idx = row * 3 + col  # region index from 0 to 8
+
+                lab_color = tuple(lab_image[y, x])
+                L, a, b = lab_color
+
+                if L < L_THRESHOLD and abs(a) < AB_THRESHOLD and abs(b) < AB_THRESHOLD:
+                    continue
+
+                if lab_color in membership_cache:
+                    membership_degrees = membership_cache[lab_color]
+                else:
+                    membership_degrees = fuzzy_color_space.calculate_membership(lab_color)
+                    membership_cache[lab_color] = membership_degrees
+
+                for name, degree in membership_degrees.items():
+                    if name in region_counts[region_idx]:
+                        region_counts[region_idx][name] += degree
+                    else:
+                        region_counts[region_idx][name] = degree
+
+        # Format output
+        region_results = {}
+        for idx, counts in enumerate(region_counts):
+            total_degree = sum(counts.values())
+            region_name = f"row{idx//3+1}_col{idx%3+1}"  # Ejemplo: row1_col1, row2_col3, etc.
+
+            if total_degree > 0:
+                normalized_counts = {k: v / total_degree for k, v in counts.items()}
+                sorted_prototypes = sorted(
+                    {k: v for k, v in normalized_counts.items() if k != "BLACK"}.items(),
+                    key=lambda item: item[1],
+                    reverse=True
+                )
+                region_results[region_name] = [
+                    (proto, round(degree, 3))
+                    for proto, degree in sorted_prototypes[:3]
+                    if degree >= 0.1
+                ]
+            else:
+                region_results[region_name] = []
+
+        return region_results
+    
+
+    def max_possibility_aggregation(self, image, fuzzy_color_space):
+        # Convert image to numpy array
+        img_np = np.array(image)
+
+        # Remove alpha channel if present
+        if img_np.shape[-1] == 4:
+            img_np = img_np[..., :3]
+
+        # Normalize pixel values
+        img_np = img_np / 255.0
+        lab_image = color.rgb2lab(img_np)
+
+        membership_cache = {}
+        # 9 regions: 3 rows × 3 cols
+        region_max_membership = [{} for _ in range(9)]
+
+        height, width = img_np.shape[:2]
+        height_third = height // 3
+        width_third = width // 3
+
+        L_THRESHOLD = 20
+        AB_THRESHOLD = 10
+
+        for y in range(height):
+            row = y // height_third
+            if row > 2:
+                row = 2
+
+            for x in range(width):
+                col = x // width_third
+                if col > 2:
+                    col = 2
+
+                region_idx = row * 3 + col
+
+                lab_color = tuple(lab_image[y, x])
+                L, a, b = lab_color
+
+                # Skip very dark/grayish pixels (e.g., BLACK)
+                if L < L_THRESHOLD and abs(a) < AB_THRESHOLD and abs(b) < AB_THRESHOLD:
+                    continue
+
+                if lab_color in membership_cache:
+                    membership_degrees = membership_cache[lab_color]
+                else:
+                    membership_degrees = fuzzy_color_space.calculate_membership(lab_color)
+                    membership_cache[lab_color] = membership_degrees
+
+                # Outlier filtering: skip if only one very high membership value
+                if membership_degrees:
+                    high_vals = [v for v in membership_degrees.values() if v > 0.8]
+                    if max(membership_degrees.values()) > 0.9 and len(high_vals) <= 1:
+                        continue
+
+                for name, degree in membership_degrees.items():
+                    current_max = region_max_membership[region_idx].get(name, 0)
+                    region_max_membership[region_idx][name] = max(current_max, degree)
+
+        # Format output
+        region_results = {}
+        for idx, max_degrees in enumerate(region_max_membership):
+            region_name = f"row{idx//3+1}_col{idx%3+1}"
+
+            # Remove BLACK if it's considered irrelevant
+            filtered = {k: v for k, v in max_degrees.items() if k != "BLACK"}
+
+            if filtered:
+                # Take top 3 prototypes by membership value
+                # top_prototypes = sorted(filtered.items(), key=lambda item: item[1], reverse=True)[:3]
+                # region_results[region_name] = [(proto, round(val, 3)) for proto, val in top_prototypes]
+
+                max_val = max(filtered.values())
+                if max_val > 0:
+                    normalized = {k: v / max_val for k, v in filtered.items()}
+                else:
+                    normalized = filtered
+
+                top_prototypes = sorted(normalized.items(), key=lambda item: item[1], reverse=True)[:3]
+                region_results[region_name] = [(proto, round(val, 3)) for proto, val in top_prototypes]
+
+            else:
+                region_results[region_name] = []
+
+        return region_results
+
+
+
 
 
 
