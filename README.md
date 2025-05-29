@@ -34,11 +34,7 @@ This repository hosts the graphical interface for **interactive creation and vis
    - Scaling to define *core*, *α-cut* (e.g., 0.5 level), and *support* regions.
    - An additional prototype representing the black background commonly used in dental photography to reduce misclassification.
 
-   The resulting fuzzy color space includes 17 fuzzy colors (16 shades from the VITA Classical Shade Guide plus the black background), formally defined as:
-
-   \[
-   \tilde{C}_{VITA} = \{\tilde{C}_{A1}, \tilde{C}_{A2}, \ldots, \tilde{C}_{D4}, \tilde{C}_{\text{BLACK}}\}
-   \]
+   The resulting fuzzy color space includes 17 fuzzy colors (16 shades from the VITA Classical Shade Guide plus the black background).
 
 2. **Interactive 3D visualization**: offers an intuitive environment to explore and analyze the constructed fuzzy color space, featuring:
    - Menus for loading images, selecting shades, and managing model components.
