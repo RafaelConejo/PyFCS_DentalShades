@@ -87,7 +87,7 @@ If no modifications to the source code are needed, follow these steps for a quic
    ```
 5. Once the dependencies are installed, launch the main interface structure by executing:
     ```bash
-    python PyFCS\visualization\basic_structure.py
+    python PyFCS\visualization\main_structure.py
     ```
 
 ---
