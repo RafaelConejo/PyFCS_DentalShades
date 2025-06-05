@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget, QApplication, QMainWindow
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QEventLoop
 import matplotlib.pyplot as plt
-
+import platform
 
 
 
@@ -205,7 +205,7 @@ class PyFCSApp:
                 text=option,
                 variable=var,
                 bg="gray95",
-                font=("Arial", 10),
+                font=("Sans", 10),
                 command=self.on_option_select
             ).pack(side="left", padx=20)
 
@@ -242,7 +242,13 @@ class PyFCSApp:
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
             def _bind_mousewheel(event):
-                canvas.bind_all("<MouseWheel>", _on_mousewheel)
+                if platform.system() == 'Windows':
+                    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+                elif platform.system() == 'Darwin':  # macOS
+                    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+                else:  # Linux
+                    canvas.bind_all("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
+                    canvas.bind_all("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
 
             def _unbind_mousewheel(event):
                 canvas.unbind_all("<MouseWheel>")
@@ -261,7 +267,7 @@ class PyFCSApp:
             self.inner_frame,
             text="Select All",
             bg="lightgray",
-            font=("Arial", 10),
+            font=("Sans", 10),
             command=self.select_all_color  
         )
         if self.COLOR_SPACE:
@@ -373,8 +379,14 @@ class PyFCSApp:
         Toggle between fullscreen and windowed mode.
         If the current state is fullscreen, switch to windowed mode, and vice versa.
         """
-        current_state = self.root.attributes("-fullscreen")
-        self.root.attributes("-fullscreen", not current_state)
+        try:
+            current_state = self.root.attributes("-fullscreen")
+            self.root.attributes("-fullscreen", not current_state)
+        except tk.TclError:
+            # Fallback: resize manually if fullscreen fails
+            screen_width = self.root.winfo_screenwidth()
+            screen_height = self.root.winfo_screenheight()
+            self.root.geometry(f"{screen_width}x{screen_height}+0+0")
 
 
     
@@ -385,12 +397,12 @@ class PyFCSApp:
         warning_win.configure(bg="#f5f5f5")  # Light gray background
 
         # Warning text
-        label = tk.Label(warning_win, text=message, font=("Arial", 11, "bold"), 
+        label = tk.Label(warning_win, text=message, font=("Sans", 11, "bold"), 
                         fg="#333333", bg="#f5f5f5", wraplength=350)
         label.pack(pady=15, padx=20)
 
         # Stylized close button
-        btn_ok = tk.Button(warning_win, text="OK", font=("Arial", 11, "bold"), 
+        btn_ok = tk.Button(warning_win, text="OK", font=("Sans", 11, "bold"), 
                         bg="#999999", fg="white", bd=0, padx=10, pady=0, 
                         relief="flat", activebackground="#8c8c8c", 
                         command=warning_win.destroy)
@@ -414,7 +426,7 @@ class PyFCSApp:
         self.load_window.resizable(False, False)
 
         # Label with large font
-        label = tk.Label(self.load_window, text="Loading Color Space...", font=("Arial", 16, "bold"), padx=20, pady=20)
+        label = tk.Label(self.load_window, text="Loading Color Space...", font=("Sans", 16, "bold"), padx=20, pady=20)
         label.pack(pady=(10, 5))
 
         self.center_popup(self.load_window, 300, 100)
@@ -437,7 +449,7 @@ class PyFCSApp:
         self.load_window.resizable(False, False)  # Disable resizing
 
         # Label for the loading message
-        label = tk.Label(self.load_window, text="Processing...", font=("Arial", 12), padx=10, pady=10)
+        label = tk.Label(self.load_window, text="Processing...", font=("Sans", 12), padx=10, pady=10)
         label.pack(pady=(10, 5))
 
         # Progress bar
@@ -585,7 +597,7 @@ class PyFCSApp:
         This includes loading the file, extracting the data, and displaying it visually on a canvas.
         """
         # Prompt the user to select a file
-        filename = utils_structure.prompt_file_selection('PyFCS_Dental_GUI\\fuzzy_color_spaces\\')
+        filename = utils_structure.prompt_file_selection(os.path.join('PyFCS_Dental_GUI', 'fuzzy_color_spaces'))
 
         if not filename:
             # Notify the user if no file was selected
@@ -1054,7 +1066,7 @@ class PyFCSApp:
         self.display_color_buttons(self.color_matrix)
 
         # Crear y añadir un botón con el símbolo "+"
-        self.add_button = tk.Button(self.Canvas1, text="Interactive Figure", font=("Arial", 12), command=lambda: self.on_add_graph(selected_options))
+        self.add_button = tk.Button(self.Canvas1, text="Interactive Figure", font=("Sans", 12), command=lambda: self.on_add_graph(selected_options))
         self.add_button.place(relx=0.95, rely=0.05, anchor="ne")  # Posiciona el botón en la esquina superior derecha
 
 
@@ -1069,7 +1081,7 @@ class PyFCSApp:
             self.root.config(menu=self.menubar)  # Asigna la nueva barra de menú
 
             # Define el tamaño de la fuente que se usará en los menús
-            menu_font = tkFont.Font(family="Arial", size=11)  # Puedes ajustar el tamaño (size) aquí
+            menu_font = tkFont.Font(family="Sans", size=11)  # Puedes ajustar el tamaño (size) aquí
 
             # File menu
             file_menu = Menu(self.menubar, tearoff=0)
@@ -1242,7 +1254,7 @@ class PyFCSApp:
                 text=color,
                 variable=self.selected_colors[color],  # Variable for checkbox state
                 bg="gray95",  # Button background color
-                font=("Arial", 10),
+                font=("Sans", 10),
                 onvalue=True,  # Value when checked
                 offvalue=False,  # Value when unchecked
                 command=self.select_color,  # Call select_color on change
@@ -1309,7 +1321,7 @@ class PyFCSApp:
             )
             self.data_window.create_text(
                 x_pos + column_widths[i] / 2, y_start + header_height / 2,
-                text=header, anchor="center", font=("Arial", 10, "bold")
+                text=header, anchor="center", font=("Sans", 10, "bold")
             )
 
         # Adjust starting point for rows
@@ -1335,7 +1347,7 @@ class PyFCSApp:
                 )
                 self.data_window.create_text(
                     x_pos + column_widths[j] / 2, y_start + row_height / 2,
-                    text=str(round(value, 2)) if j < 3 else value, anchor="center", font=("Arial", 10)
+                    text=str(round(value, 2)) if j < 3 else value, anchor="center", font=("Sans", 10)
                 )
 
             # Convert LAB to RGB and draw the color rectangle
@@ -1355,7 +1367,7 @@ class PyFCSApp:
             action_x_pos = x_start + table_width + 20  # Position to the right of the table
             self.data_window.create_text(
                 action_x_pos, y_start + row_height / 2,
-                text="❌", fill="black", font=("Arial", 10, "bold"), anchor="center",
+                text="❌", fill="black", font=("Sans", 10, "bold"), anchor="center",
                 tags=(f"delete_{i}",)
             )
             self.data_window.tag_bind(f"delete_{i}", "<Button-1>", lambda event, idx=i: self.remove_color(idx))
@@ -1658,7 +1670,7 @@ class PyFCSApp:
 
         # Display the image filename in the title bar
         self.image_canvas.create_text(
-            x + 50, y + 15, anchor="w", text=os.path.basename(filename), fill="white", font=("Arial", 10), tags=(window_id, "floating")
+            x + 50, y + 15, anchor="w", text=os.path.basename(filename), fill="white", font=("Sans", 10), tags=(window_id, "floating")
         )
 
         # Create a close button in the title bar
@@ -1666,12 +1678,12 @@ class PyFCSApp:
             x + rect_width + 25, y + 5, x + rect_width + 5, y + 25, outline="black", fill="red", tags=(window_id, "floating", f"{window_id}_close_button")
         )
         self.image_canvas.create_text(
-            x + rect_width + 15, y + 15, text="X", fill="white", font=("Arial", 10, "bold"), tags=(window_id, "floating", f"{window_id}_close_button")
+            x + rect_width + 15, y + 15, text="X", fill="white", font=("Sans", 10, "bold"), tags=(window_id, "floating", f"{window_id}_close_button")
         )
 
         # Add an arrow button to the left side of the title bar
         self.image_canvas.create_text(
-            x + 15, y + 15, text="▼", fill="white", font=("Arial", 12), tags=(window_id, "floating", f"{window_id}_arrow_button")
+            x + 15, y + 15, text="▼", fill="white", font=("Sans", 12), tags=(window_id, "floating", f"{window_id}_arrow_button")
         )
 
         # Display the image inside the frame using a Label widget
@@ -1824,8 +1836,8 @@ class PyFCSApp:
             text_frame.pack(side="left", padx=10, pady=5, fill="x")
 
             # Define fonts for labels
-            bold_font = ("Arial", 12, "bold")
-            normal_font = ("Arial", 12)
+            bold_font = ("Sans", 12, "bold")
+            normal_font = ("Sans", 12)
 
             # Coordinates label and value
             coord_label = tk.Label(text_frame, text="Coordinates: ", font=bold_font, bg="lightgray")
@@ -1847,7 +1859,7 @@ class PyFCSApp:
 
             # "More Info" button
             more_info_button = tk.Button(
-                self.lab_value_frame, text="🔍", font=("Arial", 9),
+                self.lab_value_frame, text="🔍", font=("Sans", 9),
                 bg="white", command=self.show_more_info, relief="flat", borderwidth=0
             )
             more_info_button.pack(side="right", padx=5, pady=2)
@@ -2363,7 +2375,7 @@ class PyFCSApp:
                 value=color,
                 bg="white",
                 anchor="w",
-                font=("Arial", 10),
+                font=("Sans", 10),
                 relief="flat",
                 command=lambda color=color: self.get_proto_percentage(window_id)
             )
@@ -2962,7 +2974,7 @@ class PyFCSApp:
             # Title label
             filename = os.path.basename(self.load_images_names[window_id])
             tk.Label(result_window, text=f"Results for: {filename}", bg="white",
-                    font=("Arial", 12, "bold")).pack(pady=(10, 10))
+                    font=("Sans", 12, "bold")).pack(pady=(10, 10))
 
             # Radio button options (Normal / Max)
             mode_frame = tk.Frame(result_window, bg="white")
@@ -3008,16 +3020,16 @@ class PyFCSApp:
                         frame.grid(row=r_idx, column=c_idx, padx=5, pady=5, sticky="nsew")
 
                         tk.Label(frame, text=f"Row {row}, Col {col}", bg="#f2f2f2",
-                                font=("Arial", 10, "bold")).pack()
+                                font=("Sans", 10, "bold")).pack()
 
                         region_data = region_grid.get((row, col), [])
                         if region_data:
                             for proto, degree in region_data:
                                 tk.Label(frame, text=f"{proto}: {degree:.3f}", bg="#f2f2f2",
-                                        font=("Arial", 9)).pack(anchor="w")
+                                        font=("Sans", 9)).pack(anchor="w")
                         else:
                             tk.Label(frame, text="(No valid data)", bg="#f2f2f2",
-                                    font=("Arial", 9, "italic")).pack()
+                                    font=("Sans", 9, "italic")).pack()
 
             # Frame para los radio buttons
             mode_frame = tk.Frame(result_window, bg="white")
@@ -3029,7 +3041,7 @@ class PyFCSApp:
                                         variable=selected_mode,
                                         value="Normalized Average Aggregation",
                                         command=update_results_display,
-                                        bg="white", font=("Arial", 10))
+                                        bg="white", font=("Sans", 10))
             normal_radio.pack(anchor="w", padx=10)
 
             max_radio = tk.Radiobutton(mode_frame,
@@ -3037,7 +3049,7 @@ class PyFCSApp:
                                     variable=selected_mode,
                                     value="Max-Possibility Aggregation",
                                     command=update_results_display,
-                                    bg="white", font=("Arial", 10))
+                                    bg="white", font=("Sans", 10))
             max_radio.pack(anchor="w", padx=10)
 
             # Mostrar resultados iniciales (modo normalizado)
