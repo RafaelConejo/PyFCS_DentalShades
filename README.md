@@ -16,7 +16,7 @@ For an overview of how the repositories are organized and how each component con
 
 The complete system for expert validation and visualization of the fuzzy color space in dentistry is distributed across two main repositories:
 
-### 🔹 [`Expert_Validation_Interface`](https://github.com/RafaelConejo/Expert_Validation_Interface)
+### 🔹 Expert_Validation_Interface
 
 This repository contains all components required to run the **expert validation module**, which is fully integrated into the **PyFCS** ecosystem. Key features include:
 
@@ -25,7 +25,7 @@ This repository contains all components required to run the **expert validation 
 - Seamless integration with the fuzzy reasoning core.
 - Full documentation and usage instructions available in the main repository: [`PyFCS_DentalShades`](https://github.com/RafaelConejo/PyFCS_DentalShades).
 
-### 🔹 [`PyFCS_Dental_GUI`](https://github.com/RafaelConejo/PyFCS_Dental_GUI)
+### 🔹 PyFCS_Dental_GUI
 
 This repository hosts the graphical interface for **interactive creation and visualization** of the fuzzy color space. Key functionalities include:
 
@@ -89,6 +89,13 @@ If no modifications to the source code are needed, follow these steps for a quic
     ```bash
     python PyFCS\visualization\main_structure.py
     ```
+
+---
+
+## 📖 Interface Manual
+
+A complete manual explaining the use of the GUI, including examples and step-by-step guides, is available in the following folder of the repository:  
+🔗 [PyFCS_GUI_Manual](https://github.com/RafaelConejo/PyFCS_GUI/tree/main/PyFCS_GUI_Manual)
 
 ---
 
