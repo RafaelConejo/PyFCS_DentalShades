@@ -55,13 +55,29 @@ The full source code is available at: [`PyFCS_DentalShades`](https://github.com/
    - From the **Releases** section as a `.zip` file.
 2. Extract the contents to a local directory.
 3. Navigate to the root folder and install the required dependencies:
-```bash
-   pip install -r Expert_Validation_Interface/Datasets/requirements.txt
-```
+
+   - **On Windows:**
+     ```bash
+     pip install -r Expert_Validation_Interface\Datasets\requirements.txt
+     ```
+
+   - **On Linux/macOS:**
+     ```bash
+     pip install -r Expert_Validation_Interface/Datasets/requirements.txt
+     ```
+
 4. Now to run **Tooth Color Validation**:
-```bash
-python Expert_Validation_Interface\VITA_validation_software.py
-```
+
+   - **On Windows:**
+     ```bash
+     python Expert_Validation_Interface\VITA_validation_software.py
+     ```
+
+   - **On Linux/macOS:**
+     ```bash
+     python Expert_Validation_Interface/VITA_validation_software.py
+     ```
+
 
 
 ### Results and Evaluation
@@ -77,18 +93,35 @@ If no modifications to the source code are needed, follow these steps for a quic
 1. Access the project repository on GitHub and download the library using the **"Clone or Download"** button, or from the **Releases** section by downloading the `.zip` file.
 2. Extract the contents of the `.zip` file to a preferred local folder.
 3. Make sure you have **Python 3.9 or higher** installed, along with **pip** (or use an environment manager like [Anaconda](https://www.anaconda.com/)).
+
    - To install pip manually (if not already available), you can run:
      ```bash
      python -m ensurepip --upgrade
      ```
-4. Open a terminal (CMD or PowerShell), navigate to the root directory of the project, and install the required dependencies:
-   ```bash
-   pip install -r PyFCS\external\requirements.txt
-   ```
+
+4. Open a terminal, navigate to the root directory of the project, and install the required dependencies:
+
+   - **On Windows:**
+     ```bash
+     pip install -r PyFCS\external\requirements.txt
+     ```
+
+   - **On Linux/macOS:**
+     ```bash
+     pip install -r PyFCS/external/requirements.txt
+     ```
+
 5. Once the dependencies are installed, launch the main interface structure by executing:
-    ```bash
-    python PyFCS\visualization\main_structure.py
-    ```
+
+   - **On Windows:**
+     ```bash
+     python PyFCS\visualization\basic_structure.py
+     ```
+
+   - **On Linux/macOS:**
+     ```bash
+     python PyFCS/visualization/basic_structure.py
+     ```
 
 ### 🐧 Additional Notes for Linux Users
 If you're using Linux, make sure to install system-level dependencies required by the GUI before running the program. These are not Python packages and must be installed separately:
