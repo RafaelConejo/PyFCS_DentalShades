@@ -50,23 +50,42 @@ The full source code is available at: [`PyFCS_DentalShades`](https://github.com/
 
 ## Expert_Validation_Interface
 ### 🔧 Installation
+
 1. Download the repository:
    - Either via the **"Clone or Download"** button on GitHub, or
    - From the **Releases** section as a `.zip` file.
-2. Extract the contents to a local directory.
-3. Navigate to the root folder and install the required dependencies:
 
-   - **On Windows:**
+2. Extract the contents to a local directory.
+
+3. Open a terminal and navigate to the root folder of the project.
+
+4. Create and activate a virtual environment:
+
+   - **On Windows (not mandatory):**
      ```bash
-     pip install -r Expert_Validation_Interface\Datasets\requirements.txt
+     python -m venv venv_expert
+     venv_expert\Scripts\activate
      ```
 
    - **On Linux/macOS:**
      ```bash
-     pip install -r Expert_Validation_Interface/Datasets/requirements.txt
+     python3 -m venv venv_expert
+     source venv_expert/bin/activate
      ```
 
-4. Now to run **Tooth Color Validation**:
+5. Install the required dependencies:
+
+   - **On Windows:**
+     ```bash
+     python -m pip install -r Expert_Validation_Interface\Datasets\requirements.txt
+     ```
+
+   - **On Linux/macOS:**
+     ```bash
+     python3 -m pip install -r Expert_Validation_Interface/Datasets/requirements.txt
+     ```
+
+6. Run the **Tooth Color Validation** interface:
 
    - **On Windows:**
      ```bash
@@ -75,8 +94,9 @@ The full source code is available at: [`PyFCS_DentalShades`](https://github.com/
 
    - **On Linux/macOS:**
      ```bash
-     python Expert_Validation_Interface/VITA_validation_software.py
+     python3 Expert_Validation_Interface/VITA_validation_software.py
      ```
+
 
 
 
@@ -87,50 +107,64 @@ The full source code is available at: [`PyFCS_DentalShades`](https://github.com/
 ---
 
 ## PyFCS_Dental_GUI
-### 🔧 Installation
-If no modifications to the source code are needed, follow these steps for a quick installation on **Windows**:
+### 🔧 How to Use
 
-1. Access the project repository on GitHub and download the library using the **"Clone or Download"** button, or from the **Releases** section by downloading the `.zip` file.
-2. Extract the contents of the `.zip` file to a preferred local folder.
-3. Make sure you have **Python 3.9 or higher** installed, along with **pip** (or use an environment manager like [Anaconda](https://www.anaconda.com/)).
+If no modifications to the source code are needed, follow these steps for a quick installation:
 
-   - To install pip manually (if not already available), you can run:
-     ```bash
-     python -m ensurepip --upgrade
-     ```
+#### 📦 1. Download the Project
 
-4. Open a terminal, navigate to the root directory of the project, and install the required dependencies:
+Access the project repository on GitHub and download the library using the **"Clone or Download"** button, or from the **Releases** section by downloading the `.zip` file.
 
-   - **On Windows:**
-     ```bash
-     pip install -r PyFCS\external\requirements.txt
-     ```
+Extract the contents of the `.zip` file to a preferred local folder.
 
-   - **On Linux/macOS:**
-     ```bash
-     pip install -r PyFCS/external/requirements.txt
-     ```
+#### 🐍 2. Make Sure Python is Installed
 
-5. Once the dependencies are installed, launch the main interface structure by executing:
+Ensure you have **Python 3.9 or higher** installed, along with **pip**. You can also use a virtual environment manager like [Anaconda](https://www.anaconda.com/).
 
-   - **On Windows:**
-     ```bash
-     python PyFCS\visualization\basic_structure.py
-     ```
+If `pip` is not available, you can install it manually with:
 
-   - **On Linux/macOS:**
-     ```bash
-     python PyFCS/visualization/basic_structure.py
-     ```
+  ```bash
+  python -m ensurepip --upgrade
+  ```
 
-### 🐧 Additional Notes for Linux Users
-If you're using Linux, make sure to install system-level dependencies required by the GUI before running the program. These are not Python packages and must be installed separately:
-   ```bash
-   sudo apt update
-   sudo apt install python3.12-tk
-   pip install PyQtWebEngine
-   ```
-These steps ensure full compatibility with features such as Tkinter-based dialogs and enhanced Qt-based rendering on Linux systems.
+#### </> 3. Open a terminal, navigate to the root directory of the project, and install the required dependencies:
+
+  - **🪟 Windows**
+    ```bash
+    pip install -r PyFCS\external\requirements.txt
+
+    # Once the dependencies are installed, launch the main interface structure by executing:
+    python PyFCS\visualization\basic_structure.py
+    ```
+
+  - **🐧 Linux**
+    ```bash
+    python3 -m venv venv_pyfcs
+    source venv_pyfcs/bin/activate
+    python3 -m pip install -r PyFCS/external/requirements.txt
+
+    # Install system dependencies (required manually)
+    sudo apt install python3.12-tk
+    python3 -m pip install PyQtWebEngine
+
+    # Launch the interface
+    python3 PyFCS/visualization/basic_structure.py
+    ```
+
+    These steps ensure full compatibility with features such as Tkinter-based dialogs and enhanced Qt-based rendering on Linux systems.
+
+  - **🍎 macOS**
+    ```bash
+    python3 -m venv venv_pyfcs
+    source venv_pyfcs/bin/activate
+    python3 -m pip install -r PyFCS/external/requirements.txt
+
+    # (If needed) Install Tkinter via Homebrew
+    brew install python-tk
+
+    # Launch the interface
+    python3 PyFCS/visualization/basic_structure.py
+    ```
 
 ---
 
